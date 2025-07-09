@@ -53,7 +53,7 @@ function showAppScreen() {
     document.getElementById('appScreen').style.display = 'block';
 }
 
-// Google API 초기화 - 개선된 버전
+// Google API 초기화
 function initializeGoogleAPI() {
     console.log('Google API 초기화 시작...');
     
@@ -73,7 +73,6 @@ function initializeGoogleAPI() {
         });
 }
 
-// GAPI 초기화를 별도 함수로 분리
 function initializeGapi() {
     return new Promise((resolve, reject) => {
         if (typeof gapi !== 'undefined') {
@@ -103,7 +102,6 @@ function initializeGapi() {
     });
 }
 
-// GSI 초기화를 별도 함수로 분리
 function initializeGsi() {
     return new Promise((resolve) => {
         if (typeof google !== 'undefined' && google.accounts) {
@@ -126,9 +124,8 @@ function initializeGsi() {
     });
 }
 
-// 초기화 완료 확인
 function checkInitComplete() {
-    console.log(`초기화 상태 확인: GAPI=${isGapiLoaded}, GSI=${isGsiLoaded}`);
+    console.log('초기화 상태 확인: GAPI=' + isGapiLoaded + ', GSI=' + isGsiLoaded);
     
     if (isGapiLoaded && isGsiLoaded) {
         console.log('모든 API 준비 완료, 로그인 설정 시작...');
@@ -156,7 +153,6 @@ function checkInitComplete() {
     }
 }
 
-// Google 로그인 설정
 function setupGoogleSignIn() {
     const signInBtn = document.getElementById('googleSignInBtn');
     const signOutBtn = document.getElementById('signOutBtn');
@@ -169,7 +165,6 @@ function setupGoogleSignIn() {
     }
 }
 
-// 로그인 처리
 async function handleSignIn() {
     try {
         showSyncStatus('로그인 중...', 'syncing');
@@ -200,7 +195,6 @@ async function handleSignIn() {
     }
 }
 
-// 로그아웃 처리
 async function handleSignOut() {
     if (confirm('로그아웃하시겠습니까? 로컬 데이터는 유지됩니다.')) {
         try {
@@ -217,7 +211,6 @@ async function handleSignOut() {
     }
 }
 
-// 사용자 UI 업데이트
 function updateUserUI() {
     if (currentUser) {
         const userName = document.getElementById('userName');
@@ -230,11 +223,11 @@ function updateUserUI() {
     }
 }
 
-// 동기화 상태 표시
-function showSyncStatus(message, status = 'synced') {
+function showSyncStatus(message, status) {
+    status = status || 'synced';
     const syncStatus = document.getElementById('syncStatus');
-    const syncText = syncStatus?.querySelector('.sync-text');
-    const syncIcon = syncStatus?.querySelector('.sync-icon');
+    const syncText = syncStatus ? syncStatus.querySelector('.sync-text') : null;
+    const syncIcon = syncStatus ? syncStatus.querySelector('.sync-icon') : null;
     
     if (syncText) syncText.textContent = message;
     
@@ -252,11 +245,10 @@ function showSyncStatus(message, status = 'synced') {
     }
     
     if (syncStatus) {
-        syncStatus.className = `sync-status ${status}`;
+        syncStatus.className = 'sync-status ' + status;
     }
 }
 
-// Google Drive 데이터 저장
 async function saveToGoogleDrive() {
     if (!isSignedIn) return;
     
@@ -285,7 +277,6 @@ async function saveToGoogleDrive() {
     }
 }
 
-// Google Drive 데이터 로드
 async function loadFromGoogleDrive() {
     if (!isSignedIn) return;
     
@@ -299,9 +290,9 @@ async function loadFromGoogleDrive() {
             if (data.records && data.records.length > 0) {
                 if (records.length > 0) {
                     const merge = confirm(
-                        `클라우드에서 ${data.records.length}개의 기록을 찾았습니다.\n` +
-                        `현재 로컬에는 ${records.length}개의 기록이 있습니다.\n\n` +
-                        `확인: 클라우드 데이터로 교체\n취소: 기존 데이터 유지`
+                        '클라우드에서 ' + data.records.length + '개의 기록을 찾았습니다.\n' +
+                        '현재 로컬에는 ' + records.length + '개의 기록이 있습니다.\n\n' +
+                        '확인: 클라우드 데이터로 교체\n취소: 기존 데이터 유지'
                     );
                     
                     if (merge) {
@@ -325,7 +316,6 @@ async function loadFromGoogleDrive() {
     }
 }
 
-// 수동 동기화
 async function manualSync() {
     if (!isSignedIn) {
         alert('로그인이 필요합니다.');
@@ -340,7 +330,6 @@ async function manualSync() {
     }
 }
 
-// 마지막 동기화 시간 업데이트
 function updateLastSyncTime() {
     const lastSyncTime = localStorage.getItem('lastSyncTime');
     const element = document.getElementById('lastSyncTime');
@@ -351,7 +340,6 @@ function updateLastSyncTime() {
     }
 }
 
-// 앱 초기화
 async function initializeApp() {
     const dateInput = document.getElementById('date');
     if (dateInput) {
@@ -364,7 +352,6 @@ async function initializeApp() {
     updateUserUI();
 }
 
-// 이벤트 리스너 설정
 function setupEventListeners() {
     setupBasicEventListeners();
     
@@ -379,7 +366,6 @@ function setupEventListeners() {
     }
 }
 
-// 기본 이벤트 리스너 설정
 function setupBasicEventListeners() {
     const exerciseType = document.getElementById('exerciseType');
     if (exerciseType) {
@@ -390,7 +376,10 @@ function setupBasicEventListeners() {
             if (this.value) {
                 exerciseFields.classList.add('show');
                 
-                const selectedExercise = getAllExercises().find(ex => ex.name === this.value);
+                const selectedExercise = getAllExercises().find(function(ex) {
+                    return ex.name === this.value;
+                }.bind(this));
+                
                 if (selectedExercise && selectedExercise.hasDistance) {
                     distanceField.style.display = 'block';
                 } else {
@@ -445,47 +434,8 @@ function setupBasicEventListeners() {
             switchTab('dashboard');
         });
     }
-    
-    const importFile = document.getElementById('importFile');
-    if (importFile) {
-        importFile.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (data.records && Array.isArray(data.records)) {
-                            records = data.records;
-                            localStorage.setItem('fitnessRecords', JSON.stringify(records));
-                            
-                            if (data.customExercises && Array.isArray(data.customExercises)) {
-                                customExercises = data.customExercises;
-                                localStorage.setItem('customExercises', JSON.stringify(customExercises));
-                                initializeExercises();
-                            }
-                            
-                            updateAll();
-                            
-                            if (isSignedIn) {
-                                saveToGoogleDrive();
-                            }
-                            
-                            alert('데이터를 성공적으로 가져왔습니다!');
-                        } else {
-                            alert('올바른 데이터 파일이 아닙니다.');
-                        }
-                    } catch (error) {
-                        alert('파일을 읽는 중 오류가 발생했습니다.');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        });
-    }
 }
 
-// 로컬 백업 다운로드
 function downloadLocalBackup() {
     const data = {
         records: records,
@@ -498,7 +448,7 @@ function downloadLocalBackup() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `fitness-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = 'fitness-backup-' + new Date().toISOString().split('T')[0] + '.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -507,14 +457,13 @@ function downloadLocalBackup() {
     alert('백업 파일이 다운로드되었습니다! 💾');
 }
 
-// 운동 관련 함수들
 function initializeExercises() {
     updateExerciseSelects();
     updateExerciseList();
 }
 
 function getAllExercises() {
-    return [...defaultExercises, ...customExercises];
+    return defaultExercises.concat(customExercises);
 }
 
 function updateExerciseSelects() {
@@ -523,10 +472,10 @@ function updateExerciseSelects() {
     const exerciseSelect = document.getElementById('exerciseType');
     if (exerciseSelect) {
         exerciseSelect.innerHTML = '<option value="">선택하세요</option>';
-        exercises.forEach(exercise => {
+        exercises.forEach(function(exercise) {
             const option = document.createElement('option');
             option.value = exercise.name;
-            option.textContent = `${exercise.icon} ${exercise.name}`;
+            option.textContent = exercise.icon + ' ' + exercise.name;
             exerciseSelect.appendChild(option);
         });
     }
@@ -534,10 +483,10 @@ function updateExerciseSelects() {
     const filterSelect = document.getElementById('filterExercise');
     if (filterSelect) {
         filterSelect.innerHTML = '<option value="">전체</option>';
-        exercises.forEach(exercise => {
+        exercises.forEach(function(exercise) {
             const option = document.createElement('option');
             option.value = exercise.name;
-            option.textContent = `${exercise.icon} ${exercise.name}`;
+            option.textContent = exercise.icon + ' ' + exercise.name;
             filterSelect.appendChild(option);
         });
     }
@@ -548,26 +497,31 @@ function updateExerciseList() {
     if (!exerciseList) return;
     
     const exercises = getAllExercises();
-    exerciseList.innerHTML = exercises.map((exercise, index) => `
-        <div class="exercise-item">
-            <span class="exercise-name">${exercise.icon} ${exercise.name}</span>
-            <div>
-                ${exercise.hasDistance ? '<span style="font-size: 12px; color: #666; margin-right: 10px;">거리 기록</span>' : ''}
-                ${index >= defaultExercises.length ?
-                    `<button class="exercise-remove-btn" onclick="removeCustomExercise(${index - defaultExercises.length})">삭제</button>` :
-                    '<span style="font-size: 12px; color: #999;">기본 운동</span>'
-                }
-            </div>
-        </div>
-    `).join('');
+    exerciseList.innerHTML = exercises.map(function(exercise, index) {
+        return '<div class="exercise-item">' +
+            '<span class="exercise-name">' + exercise.icon + ' ' + exercise.name + '</span>' +
+            '<div>' +
+            (exercise.hasDistance ? '<span style="font-size: 12px; color: #666; margin-right: 10px;">거리 기록</span>' : '') +
+            (index >= defaultExercises.length ?
+                '<button class="exercise-remove-btn" onclick="removeCustomExercise(' + (index - defaultExercises.length) + ')">삭제</button>' :
+                '<span style="font-size: 12px; color: #999;">기본 운동</span>') +
+            '</div>' +
+            '</div>';
+    }).join('');
 }
 
-// 탭 전환 함수
 function switchTab(tabName) {
-    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
     
-    const clickedButton = event ? event.target : document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+    tabButtons.forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    tabContents.forEach(function(content) {
+        content.classList.remove('active');
+    });
+    
+    const clickedButton = event ? event.target : document.querySelector('[onclick="switchTab(\'' + tabName + '\')"]');
     if (clickedButton) {
         clickedButton.classList.add('active');
     }
@@ -582,7 +536,6 @@ function switchTab(tabName) {
     }
 }
 
-// 운동 추가 모달 관련 함수들
 function showAddExerciseModal() {
     const modal = document.getElementById('addExerciseModal');
     if (modal) {
@@ -611,7 +564,7 @@ async function addExerciseFromModal() {
     }
     
     const allExercises = getAllExercises();
-    if (allExercises.some(ex => ex.name === name)) {
+    if (allExercises.some(function(ex) { return ex.name === name; })) {
         alert('이미 존재하는 운동입니다.');
         return;
     }
@@ -645,7 +598,7 @@ async function addNewExercise() {
     }
     
     const allExercises = getAllExercises();
-    if (allExercises.some(ex => ex.name === name)) {
+    if (allExercises.some(function(ex) { return ex.name === name; })) {
         alert('이미 존재하는 운동입니다.');
         return;
     }
@@ -685,7 +638,6 @@ async function removeCustomExercise(index) {
     }
 }
 
-// 데이터 관리 함수들
 function importData() {
     document.getElementById('importFile').click();
 }
@@ -711,7 +663,9 @@ async function clearAllData() {
 
 async function deleteRecord(id) {
     if (confirm('이 기록을 삭제하시겠습니까?')) {
-        records = records.filter(record => record.id !== id);
+        records = records.filter(function(record) {
+            return record.id !== id;
+        });
         localStorage.setItem('fitnessRecords', JSON.stringify(records));
         
         if (isSignedIn) {
@@ -722,13 +676,12 @@ async function deleteRecord(id) {
     }
 }
 
-// 필터 관련 함수들
 function applyFilters() {
-    const dateFilter = document.getElementById('filterDate')?.value;
-    const exerciseFilter = document.getElementById('filterExercise')?.value;
-    const keywordFilter = document.getElementById('filterKeyword')?.value.toLowerCase();
+    const dateFilter = document.getElementById('filterDate') ? document.getElementById('filterDate').value : '';
+    const exerciseFilter = document.getElementById('filterExercise') ? document.getElementById('filterExercise').value : '';
+    const keywordFilter = document.getElementById('filterKeyword') ? document.getElementById('filterKeyword').value.toLowerCase() : '';
     
-    filteredRecords = records.filter(record => {
+    filteredRecords = records.filter(function(record) {
         const dateMatch = !dateFilter || record.date === dateFilter;
         const exerciseMatch = !exerciseFilter || record.exerciseType === exerciseFilter;
         const keywordMatch = !keywordFilter || record.notes.toLowerCase().includes(keywordFilter);
@@ -748,13 +701,12 @@ function clearFilters() {
     if (filterExercise) filterExercise.value = '';
     if (filterKeyword) filterKeyword.value = '';
     
-    filteredRecords = [...records];
+    filteredRecords = records.slice();
     displayFilteredRecords();
 }
 
-// UI 업데이트 함수들
 function updateAll() {
-    filteredRecords = [...records];
+    filteredRecords = records.slice();
     displayFilteredRecords();
     displayRecentRecords();
     updateStats();
@@ -772,13 +724,13 @@ function updateStats() {
         totalRecordsElement.textContent = records.length;
     }
     
-    const weightRecords = records.filter(r => r.weight).map(r => r.weight);
-    const totalExerciseTime = records.filter(r => r.duration).reduce((sum, r) => sum + r.duration, 0);
-    const totalCalories = records.filter(r => r.calories).reduce((sum, r) => sum + r.calories, 0);
-    const totalDistance = records.filter(r => r.distance).reduce((sum, r) => sum + r.distance, 0);
+    const weightRecords = records.filter(function(r) { return r.weight; }).map(function(r) { return r.weight; });
+    const totalExerciseTime = records.filter(function(r) { return r.duration; }).reduce(function(sum, r) { return sum + r.duration; }, 0);
+    const totalCalories = records.filter(function(r) { return r.calories; }).reduce(function(sum, r) { return sum + r.calories; }, 0);
+    const totalDistance = records.filter(function(r) { return r.distance; }).reduce(function(sum, r) { return sum + r.distance; }, 0);
     
-    const stepsRecords = records.filter(r => r.steps);
-    const totalSteps = stepsRecords.reduce((sum, r) => sum + r.steps, 0);
+    const stepsRecords = records.filter(function(r) { return r.steps; });
+    const totalSteps = stepsRecords.reduce(function(sum, r) { return sum + r.steps; }, 0);
     const avgSteps = stepsRecords.length > 0 ? Math.round(totalSteps / stepsRecords.length) : 0;
     
     const totalExerciseTimeElement = document.getElementById('totalExerciseTime');
@@ -803,7 +755,7 @@ function updateStats() {
             const changeElement = document.getElementById('weightChange');
             if (changeElement) {
                 changeElement.textContent = (weightChange > 0 ? '+' : '') + weightChange.toFixed(1);
-                                changeElement.style.color = weightChange > 0 ? '#ff6b6b' : '#4ecdc4';
+                changeElement.style.color = weightChange > 0 ? '#ff6b6b' : '#4ecdc4';
             }
         }
     }
@@ -815,22 +767,19 @@ function updateDashboardStats() {
     const today = new Date().toISOString().split('T')[0];
     const thisWeekStart = getWeekStart(new Date());
     
-    // 오늘 걸음수
-    const todayRecord = records.find(r => r.date === today);
-    const todaySteps = todayRecord ? todayRecord.steps || 0 : 0;
+    const todayRecord = records.find(function(r) { return r.date === today; });
+    const todaySteps = todayRecord ? (todayRecord.steps || 0) : 0;
     const todayStepsElement = document.getElementById('todaySteps');
     if (todayStepsElement) todayStepsElement.textContent = todaySteps.toLocaleString();
     
-    // 이번 주 칼로리
     const weeklyCalories = records
-        .filter(r => new Date(r.date) >= thisWeekStart && r.calories)
-        .reduce((sum, r) => sum + r.calories, 0);
+        .filter(function(r) { return new Date(r.date) >= thisWeekStart && r.calories; })
+        .reduce(function(sum, r) { return sum + r.calories; }, 0);
     const weeklyCaloriesElement = document.getElementById('weeklyCalories');
     if (weeklyCaloriesElement) weeklyCaloriesElement.textContent = weeklyCalories.toLocaleString();
     
-    // 이번 주 운동 횟수
     const weeklyWorkouts = records
-        .filter(r => new Date(r.date) >= thisWeekStart && r.exerciseType).length;
+        .filter(function(r) { return new Date(r.date) >= thisWeekStart && r.exerciseType; }).length;
     const weeklyWorkoutCountElement = document.getElementById('weeklyWorkoutCount');
     if (weeklyWorkoutCountElement) weeklyWorkoutCountElement.textContent = weeklyWorkouts;
     
@@ -840,7 +789,6 @@ function updateDashboardStats() {
 }
 
 function updateProgressBars(weeklyWorkouts, todaySteps) {
-    // 주간 운동 목표 (5회)
     const weeklyGoal = 5;
     const weeklyProgress = Math.min((weeklyWorkouts / weeklyGoal) * 100, 100);
     const weeklyWorkoutProgressElement = document.getElementById('weeklyWorkoutProgress');
@@ -851,10 +799,9 @@ function updateProgressBars(weeklyWorkouts, todaySteps) {
         weeklyWorkoutTextElement.textContent = 
             weeklyWorkouts >= weeklyGoal ? 
             '🎉 목표 달성!' : 
-            `목표까지 ${weeklyGoal - weeklyWorkouts}회 남음`;
+            '목표까지 ' + (weeklyGoal - weeklyWorkouts) + '회 남음';
     }
     
-    // 일일 걸음 목표 (10,000보)
     const dailyGoal = 10000;
     const dailyProgress = Math.min((todaySteps / dailyGoal) * 100, 100);
     const dailyStepsProgressElement = document.getElementById('dailyStepsProgress');
@@ -865,14 +812,14 @@ function updateProgressBars(weeklyWorkouts, todaySteps) {
         dailyStepsTextElement.textContent = 
             todaySteps >= dailyGoal ? 
             '🎉 목표 달성!' : 
-            `목표까지 ${(dailyGoal - todaySteps).toLocaleString()}보 남음`;
+            '목표까지 ' + (dailyGoal - todaySteps).toLocaleString() + '보 남음';
     }
 }
 
 function updateStreak() {
     const sortedDates = records
-        .filter(r => r.exerciseType)
-        .map(r => r.date)
+        .filter(function(r) { return r.exerciseType; })
+        .map(function(r) { return r.date; })
         .sort()
         .reverse();
     
@@ -908,11 +855,10 @@ function updateStreakCalendar() {
     if (!calendar) return;
     
     const today = new Date();
-    const workoutDates = new Set(records.filter(r => r.exerciseType).map(r => r.date));
+    const workoutDates = new Set(records.filter(function(r) { return r.exerciseType; }).map(function(r) { return r.date; }));
     
     calendar.innerHTML = '';
     
-    // 최근 14일 표시
     for (let i = 13; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
@@ -951,7 +897,7 @@ function getStepsAchievement(steps) {
 }
 
 function getExerciseIcon(exerciseName) {
-    const exercise = getAllExercises().find(ex => ex.name === exerciseName);
+    const exercise = getAllExercises().find(function(ex) { return ex.name === exerciseName; });
     return exercise ? exercise.icon : '🏃‍♂️';
 }
 
@@ -966,27 +912,26 @@ function displayRecentRecords() {
         return;
     }
     
-    recentRecords.innerHTML = recent.map(record => `
-        <div class="record-item" style="margin-bottom: 10px;">
-            <div class="record-header">
-                <span class="record-date">${formatDate(record.date)}</span>
-                <div>
-                    ${record.weight ? `<span class="record-weight">${record.weight}kg</span>` : ''}
-                    ${record.steps ? `<span class="steps-info">👟 ${record.steps.toLocaleString()}걸음${getStepsAchievement(record.steps)}</span>` : ''}
-                </div>
-            </div>
-            ${record.exerciseType ? `
-                <div class="record-exercise">
-                    <span class="exercise-type">${getExerciseIcon(record.exerciseType)} ${record.exerciseType}</span>
-                    <div class="exercise-details">
-                        ${record.duration ? `<span class="exercise-detail">⏱️ ${record.duration}분</span>` : ''}
-                        ${record.calories ? `<span class="exercise-detail">🔥 ${record.calories} kcal</span>` : ''}
-                        ${record.distance ? `<span class="exercise-detail">📏 ${record.distance.toFixed(2)}km</span>` : ''}
-                    </div>
-                </div>
-            ` : ''}
-        </div>
-    `).join('');
+    recentRecords.innerHTML = recent.map(function(record) {
+        return '<div class="record-item" style="margin-bottom: 10px;">' +
+            '<div class="record-header">' +
+            '<span class="record-date">' + formatDate(record.date) + '</span>' +
+            '<div>' +
+            (record.weight ? '<span class="record-weight">' + record.weight + 'kg</span>' : '') +
+            (record.steps ? '<span class="steps-info">👟 ' + record.steps.toLocaleString() + '걸음' + getStepsAchievement(record.steps) + '</span>' : '') +
+            '</div>' +
+            '</div>' +
+            (record.exerciseType ? 
+                '<div class="record-exercise">' +
+                '<span class="exercise-type">' + getExerciseIcon(record.exerciseType) + ' ' + record.exerciseType + '</span>' +
+                '<div class="exercise-details">' +
+                (record.duration ? '<span class="exercise-detail">⏱️ ' + record.duration + '분</span>' : '') +
+                (record.calories ? '<span class="exercise-detail">🔥 ' + record.calories + ' kcal</span>' : '') +
+                (record.distance ? '<span class="exercise-detail">📏 ' + record.distance.toFixed(2) + 'km</span>' : '') +
+                '</div>' +
+                '</div>' : '') +
+            '</div>';
+    }).join('');
 }
 
 function displayFilteredRecords() {
@@ -998,32 +943,30 @@ function displayFilteredRecords() {
         return;
     }
     
-    recordsList.innerHTML = filteredRecords.map(record => `
-        <div class="record-item">
-            <div class="record-header">
-                <span class="record-date">${formatDate(record.date)}</span>
-                <div>
-                    ${record.weight ? `<span class="record-weight">${record.weight}kg</span>` : ''}
-                    ${record.steps ? `<span class="steps-info">👟 ${record.steps.toLocaleString()}걸음${getStepsAchievement(record.steps)}</span>` : ''}
-                    <button class="delete-btn" onclick="deleteRecord(${record.id})">삭제</button>
-                </div>
-            </div>
-            ${record.exerciseType ? `
-                <div class="record-exercise">
-                    <span class="exercise-type">${getExerciseIcon(record.exerciseType)} ${record.exerciseType}</span>
-                    <div class="exercise-details">
-                        ${record.duration ? `<span class="exercise-detail">⏱️ ${record.duration}분</span>` : ''}
-                        ${record.calories ? `<span class="exercise-detail">🔥 ${record.calories} kcal</span>` : ''}
-                        ${record.distance ? `<span class="exercise-detail">📏 ${record.distance.toFixed(2)}km</span>` : ''}
-                    </div>
-                </div>
-            ` : ''}
-            ${record.notes ? `<div class="record-notes" style="color: #666; margin-top: 10px;">${record.notes}</div>` : ''}
-        </div>
-    `).join('');
+    recordsList.innerHTML = filteredRecords.map(function(record) {
+        return '<div class="record-item">' +
+            '<div class="record-header">' +
+            '<span class="record-date">' + formatDate(record.date) + '</span>' +
+            '<div>' +
+            (record.weight ? '<span class="record-weight">' + record.weight + 'kg</span>' : '') +
+            (record.steps ? '<span class="steps-info">👟 ' + record.steps.toLocaleString() + '걸음' + getStepsAchievement(record.steps) + '</span>' : '') +
+            '<button class="delete-btn" onclick="deleteRecord(' + record.id + ')">삭제</button>' +
+            '</div>' +
+            '</div>' +
+            (record.exerciseType ? 
+                '<div class="record-exercise">' +
+                '<span class="exercise-type">' + getExerciseIcon(record.exerciseType) + ' ' + record.exerciseType + '</span>' +
+                '<div class="exercise-details">' +
+                (record.duration ? '<span class="exercise-detail">⏱️ ' + record.duration + '분</span>' : '') +
+                (record.calories ? '<span class="exercise-detail">🔥 ' + record.calories + ' kcal</span>' : '') +
+                (record.distance ? '<span class="exercise-detail">📏 ' + record.distance.toFixed(2) + 'km</span>' : '') +
+                '</div>' +
+                '</div>' : '') +
+            (record.notes ? '<div class="record-notes" style="color: #666; margin-top: 10px;">' + record.notes + '</div>' : '') +
+            '</div>';
+    }).join('');
 }
 
-// 차트 관련 함수들
 function updateCharts() {
     updateWeightChart();
     updateExerciseTimeChart();
@@ -1034,30 +977,33 @@ function updateCharts() {
 }
 
 function updateWeightChart() {
-    const ctx = document.getElementById('weightChart')?.getContext('2d');
+    const ctx = document.getElementById('weightChart');
     if (!ctx) return;
+    
+    const context = ctx.getContext('2d');
+    if (!context) return;
     
     if (weightChart) {
         weightChart.destroy();
     }
     
     const weightData = records
-        .filter(r => r.weight)
+        .filter(function(r) { return r.weight; })
         .reverse()
         .slice(-30);
     
     if (weightData.length === 0) {
-        drawNoDataMessage(ctx, '체중 데이터가 없습니다');
+        drawNoDataMessage(context, '체중 데이터가 없습니다');
         return;
     }
     
-    weightChart = new Chart(ctx, {
+    weightChart = new Chart(context, {
         type: 'line',
         data: {
-            labels: weightData.map(r => formatDateShort(r.date)),
+            labels: weightData.map(function(r) { return formatDateShort(r.date); }),
             datasets: [{
                 label: '체중 (kg)',
-                data: weightData.map(r => r.weight),
+                data: weightData.map(function(r) { return r.weight; }),
                 borderColor: '#4ECDC4',
                 backgroundColor: 'rgba(78, 205, 196, 0.1)',
                 tension: 0.4,
@@ -1086,7 +1032,7 @@ function updateWeightChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `체중: ${context.parsed.y}kg`;
+                            return '체중: ' + context.parsed.y + 'kg';
                         }
                     }
                 }
@@ -1096,30 +1042,33 @@ function updateWeightChart() {
 }
 
 function updateCalorieChart() {
-    const ctx = document.getElementById('calorieChart')?.getContext('2d');
+    const ctx = document.getElementById('calorieChart');
     if (!ctx) return;
+    
+    const context = ctx.getContext('2d');
+    if (!context) return;
     
     if (calorieChart) {
         calorieChart.destroy();
     }
     
     const calorieData = records
-        .filter(r => r.calories)
+        .filter(function(r) { return r.calories; })
         .reverse()
         .slice(-14);
     
     if (calorieData.length === 0) {
-        drawNoDataMessage(ctx, '칼로리 데이터가 없습니다');
+        drawNoDataMessage(context, '칼로리 데이터가 없습니다');
         return;
     }
     
-    calorieChart = new Chart(ctx, {
+    calorieChart = new Chart(context, {
         type: 'line',
         data: {
-            labels: calorieData.map(r => formatDateShort(r.date)),
+            labels: calorieData.map(function(r) { return formatDateShort(r.date); }),
             datasets: [{
                 label: '칼로리 (kcal)',
-                data: calorieData.map(r => r.calories),
+                data: calorieData.map(function(r) { return r.calories; }),
                 borderColor: '#FF6B6B',
                 backgroundColor: 'rgba(255, 107, 107, 0.1)',
                 tension: 0.4,
@@ -1148,7 +1097,7 @@ function updateCalorieChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `칼로리: ${context.parsed.y} kcal`;
+                            return '칼로리: ' + context.parsed.y + ' kcal';
                         }
                     }
                 }
@@ -1158,30 +1107,33 @@ function updateCalorieChart() {
 }
 
 function updateExerciseTimeChart() {
-    const ctx = document.getElementById('exerciseTimeChart')?.getContext('2d');
+    const ctx = document.getElementById('exerciseTimeChart');
     if (!ctx) return;
+    
+    const context = ctx.getContext('2d');
+    if (!context) return;
     
     if (exerciseTimeChart) {
         exerciseTimeChart.destroy();
     }
     
     const exerciseData = records
-        .filter(r => r.duration)
+        .filter(function(r) { return r.duration; })
         .reverse()
         .slice(-14);
     
     if (exerciseData.length === 0) {
-        drawNoDataMessage(ctx, '운동시간 데이터가 없습니다');
+        drawNoDataMessage(context, '운동시간 데이터가 없습니다');
         return;
     }
     
-    exerciseTimeChart = new Chart(ctx, {
+    exerciseTimeChart = new Chart(context, {
         type: 'line',
         data: {
-            labels: exerciseData.map(r => formatDateShort(r.date)),
+            labels: exerciseData.map(function(r) { return formatDateShort(r.date); }),
             datasets: [{
                 label: '운동시간 (분)',
-                data: exerciseData.map(r => r.duration),
+                data: exerciseData.map(function(r) { return r.duration; }),
                 borderColor: '#45B7D1',
                 backgroundColor: 'rgba(69, 183, 209, 0.1)',
                 tension: 0.4,
@@ -1210,7 +1162,7 @@ function updateExerciseTimeChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `운동시간: ${context.parsed.y}분`;
+                            return '운동시간: ' + context.parsed.y + '분';
                         }
                     }
                 }
@@ -1220,30 +1172,33 @@ function updateExerciseTimeChart() {
 }
 
 function updateDistanceChart() {
-    const ctx = document.getElementById('distanceChart')?.getContext('2d');
+    const ctx = document.getElementById('distanceChart');
     if (!ctx) return;
+    
+    const context = ctx.getContext('2d');
+    if (!context) return;
     
     if (distanceChart) {
         distanceChart.destroy();
     }
     
     const distanceData = records
-        .filter(r => r.distance)
+        .filter(function(r) { return r.distance; })
         .reverse()
         .slice(-14);
     
     if (distanceData.length === 0) {
-        drawNoDataMessage(ctx, '거리 데이터가 없습니다');
+        drawNoDataMessage(context, '거리 데이터가 없습니다');
         return;
     }
     
-    distanceChart = new Chart(ctx, {
+    distanceChart = new Chart(context, {
         type: 'line',
         data: {
-            labels: distanceData.map(r => formatDateShort(r.date)),
+            labels: distanceData.map(function(r) { return formatDateShort(r.date); }),
             datasets: [{
                 label: '거리 (km)',
-                data: distanceData.map(r => r.distance),
+                data: distanceData.map(function(r) { return r.distance; }),
                 borderColor: '#96CEB4',
                 backgroundColor: 'rgba(150, 206, 180, 0.1)',
                 tension: 0.4,
@@ -1277,7 +1232,7 @@ function updateDistanceChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `거리: ${context.parsed.y.toFixed(2)}km`;
+                            return '거리: ' + context.parsed.y.toFixed(2) + 'km';
                         }
                     }
                 }
@@ -1287,31 +1242,34 @@ function updateDistanceChart() {
 }
 
 function updateStepsChart() {
-    const ctx = document.getElementById('stepsChart')?.getContext('2d');
+    const ctx = document.getElementById('stepsChart');
     if (!ctx) return;
+    
+    const context = ctx.getContext('2d');
+    if (!context) return;
     
     if (stepsChart) {
         stepsChart.destroy();
     }
     
     const stepsData = records
-        .filter(r => r.steps)
+        .filter(function(r) { return r.steps; })
         .reverse()
         .slice(-14);
     
     if (stepsData.length === 0) {
-        drawNoDataMessage(ctx, '걸음수 데이터가 없습니다');
+        drawNoDataMessage(context, '걸음수 데이터가 없습니다');
         return;
     }
     
-    stepsChart = new Chart(ctx, {
+    stepsChart = new Chart(context, {
         type: 'line',
         data: {
-            labels: stepsData.map(r => formatDateShort(r.date)),
+            labels: stepsData.map(function(r) { return formatDateShort(r.date); }),
             datasets: [
                 {
                     label: '걸음수',
-                    data: stepsData.map(r => r.steps),
+                    data: stepsData.map(function(r) { return r.steps; }),
                     borderColor: '#32CD32',
                     backgroundColor: 'rgba(50, 205, 50, 0.1)',
                     tension: 0.4,
@@ -1319,10 +1277,10 @@ function updateStepsChart() {
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     borderWidth: 2,
-                    pointBackgroundColor: stepsData.map(r =>
-                        r.steps >= 10000 ? '#32CD32' :
-                        r.steps >= 8000 ? '#FFD700' : '#87CEEB'
-                    )
+                    pointBackgroundColor: stepsData.map(function(r) {
+                        return r.steps >= 10000 ? '#32CD32' :
+                               r.steps >= 8000 ? '#FFD700' : '#87CEEB';
+                    })
                 },
                 {
                     label: '목표 (10,000보)',
@@ -1362,9 +1320,9 @@ function updateStepsChart() {
                     callbacks: {
                         label: function(context) {
                             if (context.datasetIndex === 0) {
-                                return `걸음수: ${context.parsed.y.toLocaleString()}보`;
+                                return '걸음수: ' + context.parsed.y.toLocaleString() + '보';
                             } else {
-                                return `목표: ${context.parsed.y.toLocaleString()}보`;
+                                return '목표: ' + context.parsed.y.toLocaleString() + '보';
                             }
                         }
                     }
@@ -1375,33 +1333,36 @@ function updateStepsChart() {
 }
 
 function updateExerciseTypeChart() {
-    const ctx = document.getElementById('exerciseTypeChart')?.getContext('2d');
+    const ctx = document.getElementById('exerciseTypeChart');
     if (!ctx) return;
+    
+    const context = ctx.getContext('2d');
+    if (!context) return;
     
     if (exerciseTypeChart) {
         exerciseTypeChart.destroy();
     }
     
     const exerciseTypes = records
-        .filter(r => r.exerciseType)
-        .reduce((acc, r) => {
+        .filter(function(r) { return r.exerciseType; })
+        .reduce(function(acc, r) {
             acc[r.exerciseType] = (acc[r.exerciseType] || 0) + 1;
             return acc;
         }, {});
     
     if (Object.keys(exerciseTypes).length === 0) {
-        drawNoDataMessage(ctx, '운동 종류 데이터가 없습니다');
+        drawNoDataMessage(context, '운동 종류 데이터가 없습니다');
         return;
     }
     
     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43'];
     
-    exerciseTypeChart = new Chart(ctx, {
+    exerciseTypeChart = new Chart(context, {
         type: 'doughnut',
         data: {
-            labels: Object.keys(exerciseTypes).map(type => {
-                const exercise = getAllExercises().find(ex => ex.name === type);
-                return `${exercise ? exercise.icon : '🏃‍♂️'} ${type}`;
+            labels: Object.keys(exerciseTypes).map(function(type) {
+                const exercise = getAllExercises().find(function(ex) { return ex.name === type; });
+                return (exercise ? exercise.icon : '🏃‍♂️') + ' ' + type;
             }),
             datasets: [{
                 data: Object.values(exerciseTypes),
@@ -1428,9 +1389,9 @@ function updateExerciseTypeChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
                             const percentage = Math.round((context.parsed / total) * 100);
-                            return `${context.label}: ${context.parsed}회 (${percentage}%)`;
+                            return context.label + ': ' + context.parsed + '회 (' + percentage + '%)';
                         }
                     }
                 }
@@ -1447,7 +1408,6 @@ function drawNoDataMessage(ctx, message) {
     ctx.fillText(message, ctx.canvas.width/2, ctx.canvas.height/2);
 }
 
-// 유틸리티 함수들
 function formatDate(dateString) {
     const date = new Date(dateString);
     const today = new Date();
@@ -1470,16 +1430,15 @@ function formatDate(dateString) {
 
 function formatDateShort(dateString) {
     const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    return (date.getMonth() + 1) + '/' + date.getDate();
 }
 
-// 이벤트 리스너들
 window.onclick = function(event) {
     const modal = document.getElementById('addExerciseModal');
     if (event.target === modal) {
         closeAddExerciseModal();
     }
-}
+};
 
 window.addEventListener('resize', function() {
     const chartsTab = document.getElementById('charts');
@@ -1488,6 +1447,5 @@ window.addEventListener('resize', function() {
     }
 });
 
-// 터치 이벤트 최적화 (모바일)
 document.addEventListener('touchstart', function() {}, {passive: true});
 document.addEventListener('touchmove', function() {}, {passive: true});
