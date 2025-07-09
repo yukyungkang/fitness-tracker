@@ -119,30 +119,21 @@ function updateUserUI() {
         const userPhoto = document.getElementById('userPhoto');
         
         if (userName) userName.textContent = currentUser.name;
+        
         if (userPhoto) {
-            if (currentUser.picture && currentUser.picture !== '') {
-                userPhoto.src = currentUser.picture;
-                userPhoto.style.display = 'block';
-            } else {
-                // 이미지 대신 배경과 텍스트로 아바타 만들기
-                userPhoto.style.display = 'none';
-                userPhoto.parentElement.innerHTML = `
-                    <div class="user-avatar-text">
-                        ${currentUser.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="user-details">
-                        <span class="user-name">${currentUser.name}</span>
-                        <button id="signOutBtn" class="sign-out-btn">로그아웃</button>
-                    </div>
-                `;
-                // 로그아웃 버튼 이벤트 재설정
-                document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
+            // 이미지 숨기고 CSS로 처리하도록 설정
+            userPhoto.style.display = 'none';
+            
+            // 부모 요소에 사용자 이름 첫 글자를 data 속성으로 추가
+            const userInfo = userPhoto.closest('.user-info');
+            if (userInfo) {
+                userInfo.setAttribute('data-user-initial', currentUser.name.charAt(0).toUpperCase());
+                userInfo.classList.add('no-photo');
             }
         }
         updateLastSyncTime();
     }
 }
-
 // Google API 초기화 개선
 function initializeGoogleAPI() {
     console.log('Google API 초기화 시작...');
@@ -261,16 +252,6 @@ async function handleSignOut() {
         } catch (error) {
             console.error('로그아웃 중 오류:', error);
         }
-    }
-}
-
-function updateUserUI() {
-    if (currentUser) {
-        const userName = document.getElementById('userName');
-        const userPhoto = document.getElementById('userPhoto');
-        if (userName) userName.textContent = currentUser.name;
-        if (userPhoto) userPhoto.src = currentUser.picture;
-        updateLastSyncTime();
     }
 }
 
