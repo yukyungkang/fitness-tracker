@@ -28,7 +28,7 @@ const GOOGLE_CONFIG = {
     SCOPES: 'https://www.googleapis.com/auth/drive.file'
 };
 
-// Google API 콜백 함수들 (window 객체에 바로 할당)
+// Google API 콜백 함수들
 window.initGoogleApi = function() {
     console.log('Google API 스크립트 로드 완료');
     isGapiLoaded = true;
@@ -59,7 +59,6 @@ function checkApiReady() {
 document.addEventListener('DOMContentLoaded', function() {
     showLoadingScreen();
     
-    // 3초 후에도 API가 로드되지 않으면 오프라인 모드로 진행
     setTimeout(() => {
         if (!isGapiLoaded || !isGsiLoaded) {
             console.log('Google API 로드 시간 초과, 오프라인 모드로 진행');
@@ -104,8 +103,8 @@ function startOfflineMode() {
     console.log('오프라인 모드로 시작');
     currentUser = {
         id: 'offline_user',
-        name: '오프라인 사용자
-                email: 'offline@local',
+        name: '오프라인 사용자',
+        email: 'offline@local',
         picture: generateDefaultAvatar('오프라인 사용자')
     };
     isSignedIn = false;
@@ -149,7 +148,6 @@ function checkExistingLogin() {
         try {
             currentUser = JSON.parse(savedUser);
             
-            // 잘못된 프로필 이미지 URL 수정
             if (currentUser.picture && (
                 currentUser.picture.includes('placeholder') ||
                 currentUser.picture.includes('via.placeholder') ||
@@ -194,7 +192,6 @@ function setupGoogleSignIn() {
     }
 }
 
-// 로그인 처리
 async function handleSignIn() {
     try {
         showSyncStatus('로그인 중...', 'syncing');
@@ -264,7 +261,6 @@ function updateUserUI() {
     }
 }
 
-// 사용자 프로필 업데이트
 function updateUserProfile() {
     const newName = document.getElementById('editUserName').value.trim();
     
@@ -297,7 +293,6 @@ function updateUserProfile() {
     }
 }
 
-// 프로필 미리보기 업데이트
 function updateProfilePreview() {
     if (currentUser) {
         const currentUserName = document.getElementById('currentUserName');
@@ -311,7 +306,7 @@ function updateProfilePreview() {
             
             const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
             const color = colors[currentUser.name.length % colors.length];
-            previewAvatar.style.background = `linear-gradient(135deg, ${color} 0%, #764ba2 100%)`;
+            previewAvatar.style.background = 'linear-gradient(135deg, ' + color + ' 0%, #764ba2 100%)';
         }
     }
 }
@@ -453,7 +448,6 @@ function setupEventListeners() {
         downloadBackupBtn.addEventListener('click', downloadLocalBackup);
     }
     
-    // 프로필 이름 입력 실시간 미리보기
     const editUserName = document.getElementById('editUserName');
     if (editUserName) {
         editUserName.addEventListener('input', function() {
@@ -464,7 +458,7 @@ function setupEventListeners() {
                     previewAvatar.textContent = newName.charAt(0).toUpperCase();
                     const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
                     const color = colors[newName.length % colors.length];
-                    previewAvatar.style.background = `linear-gradient(135deg, ${color} 0%, #764ba2 100%)`;
+                    previewAvatar.style.background = 'linear-gradient(135deg, ' + color + ' 0%, #764ba2 100%)';
                 }
             }
         });
@@ -898,7 +892,7 @@ function updateProgressBars(weeklyWorkouts, todaySteps) {
     }
 
     const dailyGoal = 10000;
-    const dailyProgress = Math.min((todaySteps / dailyGoal    ) * 100, 100);
+    const dailyProgress = Math.min((todaySteps / dailyGoal) * 100, 100);
     const dailyStepsProgressElement = document.getElementById('dailyStepsProgress');
     const dailyStepsTextElement = document.getElementById('dailyStepsText');
     
@@ -1519,18 +1513,15 @@ function formatDateShort(dateString) {
     return (date.getMonth() + 1) + '/' + date.getDate();
 }
 
-// 기본 아바타 생성 함수
 function generateDefaultAvatar(name) {
     const initial = name.charAt(0).toUpperCase();
     const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
     const color = colors[name.length % colors.length];
     
-    const svg = `
-        <svg width="45" height="45" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="22.5" cy="22.5" r="22.5" fill="${color}"/>
-            <text x="22.5" y="30" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Arial">${initial}</text>
-        </svg>
-    `;
+    const svg = '<svg width="45" height="45" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="22.5" cy="22.5" r="22.5" fill="' + color + '"/>' +
+        '<text x="22.5" y="30" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Arial">' + initial + '</text>' +
+        '</svg>';
     
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
