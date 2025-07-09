@@ -84,7 +84,6 @@ function initializeGoogleAPI() {
             console.error('API 초기화 실패:', error);
             showLoginScreen();
         });
-}
 
 // GAPI 클라이언트 초기화
 function initializeGapi() {
