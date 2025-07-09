@@ -140,7 +140,10 @@ function initializeGsi() {
 
 // 초기화 완료 확인
 function checkInitComplete() {
+    console.log(`초기화 상태 확인: GAPI=${isGapiLoaded}, GSI=${isGsiLoaded}`);
+    
     if (isGapiLoaded && isGsiLoaded) {
+        console.log('모든 API 준비 완료, 로그인 설정 시작...');
         setupGoogleSignIn();
         
         // 기존 로그인 상태 확인
@@ -149,6 +152,7 @@ function checkInitComplete() {
             try {
                 currentUser = JSON.parse(savedUser);
                 isSignedIn = true;
+                console.log('기존 사용자 로그인 상태 복원');
                 showAppScreen();
                 initializeApp();
             } catch (error) {
@@ -157,8 +161,11 @@ function checkInitComplete() {
                 showLoginScreen();
             }
         } else {
+            console.log('신규 사용자, 로그인 화면 표시');
             showLoginScreen();
         }
+    } else {
+        console.log('API 초기화 대기 중...');
     }
 }
 
