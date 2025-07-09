@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 운동 & 체중 기록</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💪 나의 운동 & 체중 기록</h1>
+            <p>상세한 운동 기록으로 더 정확한 진전을 추적해보세요!</p>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="tab-container">
+            <ul class="tab-nav">
+                <li><button class="tab-button active" onclick="switchTab('dashboard')">📊 대시보드</button></li>
+                <li><button class="tab-button" onclick="switchTab('input')">📝 기록 입력</button></li>
+                <li><button class="tab-button" onclick="switchTab('records')">📋 기록 목록</button></li>
+                <li><button class="tab-button" onclick="switchTab('charts')">📈 그래프</button></li>
+                <li><button class="tab-button" onclick="switchTab('settings')">⚙️ 설정</button></li>
+            </ul>
+        </div>
+
+        <!-- 대시보드 탭 -->
+        <div id="dashboard" class="tab-content active">
+            <h2>📊 나의 운동 현황</h2>
+            
+            <!-- 주요 지표 -->
+            <div class="main-stats">
+                <div class="main-stat-card">
+                    <div class="stat-icon">🏃‍♂️</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalRecords">0</div>
+                        <div class="stat-label">총 운동 기록</div>
+                    </div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-icon">⚖️</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="currentWeight">-</div>
+                        <div class="stat-label">현재 체중 (kg)</div>
+                    </div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-icon">👟</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="todaySteps">0</div>
+                        <div class="stat-label">오늘 걸음수</div>
+                    </div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="weeklyCalories">0</div>
+                        <div class="stat-label">이번 주 칼로리</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 진행 상황 -->
+            <div class="progress-section">
+                <h3>📈 이번 주 진행률</h3>
+                <div class="progress-cards">
+                    <div class="progress-card">
+                        <div class="progress-header">
+                            <span class="progress-title">🎯 주간 운동 목표</span>
+                            <span class="progress-value"><span id="weeklyWorkoutCount">0</span>/5회</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="weeklyWorkoutProgress"></div>
+                        </div>
+                        <div class="progress-text" id="weeklyWorkoutText">목표까지 5회 남음</div>
+                    </div>
+                    
+                    <div class="progress-card">
+                        <div class="progress-header">
+                            <span class="progress-title">👟 일일 걸음 목표</span>
+                            <span class="progress-value"><span id="todayStepsProgress">0</span>/10,000보</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="dailyStepsProgress"></div>
+                        </div>
+                        <div class="progress-text" id="dailyStepsText">목표까지 10,000보 남음</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세 통계 그리드 -->
+            <div class="detailed-stats">
+                <h3>📋 상세 통계</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon-small">📊</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="weightChange">0</div>
+                            <div class="stat-label">체중 변화 (kg)</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-small">⏱️</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalExerciseTime">0</div>
+                            <div class="stat-label">총 운동시간 (분)</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-small">🔥</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalCalories">0</div>
+                            <div class="stat-label">총 소모 칼로리</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-small">📏</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalDistance">0</div>
+                            <div class="stat-label">총 거리 (km)</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-small">👟</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalSteps">0</div>
+                            <div class="stat-label">총 걸음수</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-small">📈</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="avgSteps">0</div>
+                            <div class="stat-label">일평균 걸음수</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 운동 스트릭 -->
+            <div class="streak-section">
+                <h3>🔥 운동 연속 기록</h3>
+                <div class="streak-card">
+                    <div class="streak-number" id="currentStreak">0</div>
+                    <div class="streak-label">일 연속</div>
+                    <div class="streak-emoji">🏆</div>
+                </div>
+                <div class="streak-calendar" id="streakCalendar">
+                    <!-- 달력이 여기에 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- 최근 기록 -->
+            <div class="recent-section">
+                <h3>📋 최근 기록 (최근 5개)</h3>
+                <div id="recentRecords"></div>
+            </div>
+        </div>
+
+        <!-- 기록 입력 탭 -->
+        <div id="input" class="tab-content">
+            <div class="form-section">
+                <h2>📝 오늘의 기록</h2>
+                <form id="recordForm">
+                    <div class="form-group">
+                        <label for="date">날짜:</label>
+                        <input type="date" id="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">체중 (kg):</label>
+                        <input type="number" id="weight" step="0.1" placeholder="예: 70.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="steps">걸음수:</label>
+                        <input type="number" id="steps" placeholder="예: 8500">
+                        <div class="field-hint">오늘 하루 총 걸음수</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exerciseType">운동 종류:</label>
+                        <div class="exercise-select-container">
+                            <select id="exerciseType">
+                                <option value="">선택하세요</option>
+                            </select>
+                            <button type="button" class="add-exercise-btn" onclick="showAddExerciseModal()">+ 운동 추가</button>
+                        </div>
+                    </div>
+
+                    <div id="exerciseFields" class="exercise-fields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="duration">운동 시간 (분):</label>
+                                <input type="number" id="duration" placeholder="예: 30">
+                                <div class="field-hint">운동한 총 시간</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="calories">소모 칼로리:</label>
+                                <input type="number" id="calories" placeholder="예: 300">
+                                <div class="field-hint">앱이나 기기에서 측정된 칼로리</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="distance">거리 (km):</label>
+                                <input type="number" id="distance" step="0.01" placeholder="예: 5.25">
+                                <div class="field-hint">이동한 거리 (소수점 둘째자리까지)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">메모:</label>
+                        <textarea id="notes" placeholder="오늘의 운동은 어땠나요? 컨디션, 느낀 점 등을 적어보세요."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn">기록 저장하기</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 기록 목록 탭 -->
+        <div id="records" class="tab-content">
+            <h2>📋 나의 기록들</h2>
+            
+            <!-- 필터 섹션 -->
+            <div class="filter-section">
+                <h3>🔍 기록 검색 및 필터</h3>
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="filterDate">날짜:</label>
+                        <input type="date" id="filterDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterExercise">운동 종류:</label>
+                        <select id="filterExercise">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterKeyword">키워드:</label>
+                        <input type="text" id="filterKeyword" placeholder="메모에서 검색...">
+                    </div>
+                    <div>
+                        <button class="clear-btn" onclick="clearFilters()">필터 초기화</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="recordsList"></div>
+        </div>
+
+        <!-- 그래프 탭 -->
+        <div id="charts" class="tab-content">
+            <div class="charts-section">
+                <h2>📈 진전 그래프</h2>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">📊 체중 변화 추이</div>
+                        <canvas id="weightChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">🔥 일일 칼로리 소모</div>
+                        <canvas id="calorieChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">⏱️ 일일 운동시간</div>
+                        <canvas id="exerciseTimeChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">🏃‍♂️ 일일 운동 거리</div>
+                        <canvas id="distanceChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">👟 일일 걸음수</div>
+                        <canvas id="stepsChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="chart-container exercise-chart-container">
+                        <div class="chart-title">📊 운동 종류별 분포</div>
+                        <canvas id="exerciseTypeChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 설정 탭 -->
+        <div id="settings" class="tab-content">
+            <h2>⚙️ 설정</h2>
+            
+            <!-- 운동 종류 관리 -->
+            <div class="form-section">
+                <h3>🏃‍♂️ 운동 종류 관리</h3>
+                <div class="exercise-management">
+                    <div class="current-exercises">
+                        <h4>현재 운동 종류</h4>
+                        <div id="exerciseList" class="exercise-list"></div>
+                    </div>
+                    
+                    <div class="add-exercise-section">
+                        <h4>새 운동 추가</h4>
+                        <div class="add-exercise-form">
+                            <input type="text" id="newExerciseName" placeholder="운동 이름 (예: 요가)">
+                            <input type="text" id="newExerciseIcon" placeholder="이모지 (예: 🧘‍♂️)" maxlength="2">
+                            <label class="distance-checkbox">
+                                <input type="checkbox" id="newExerciseDistance">
+                                거리 기록 필요
+                            </label>
+                            <button class="btn" onclick="addNewExercise()">운동 추가</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 데이터 관리 -->
+            <div class="form-section">
+                <h3>📁 데이터 관리</h3>
+                <div class="data-management">
+                    <button class="btn btn-export" onclick="exportData()">📤 데이터 내보내기</button>
+                    <button class="btn btn-import" onclick="importData()">📥 데이터 가져오기</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 운동 추가 모달 -->
+        <div id="addExerciseModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🏃‍♂️ 새 운동 추가</h3>
+                    <span class="close" onclick="closeAddExerciseModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modalExerciseName">운동 이름:</label>
+                        <input type="text" id="modalExerciseName" placeholder="예: 요가">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalExerciseIcon">이모지:</label>
+                        <input type="text" id="modalExerciseIcon" placeholder="예: 🧘‍♂️" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label class="distance-checkbox">
+                            <input type="checkbox" id="modalExerciseDistance">
+                            이 운동은 거리 기록이 필요합니다
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" onclick="addExerciseFromModal()">추가</button>
+                    <button class="btn btn-secondary" onclick="closeAddExerciseModal()">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
