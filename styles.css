@@ -1914,3 +1914,67 @@ textarea {
     font-size: 18px;
     text-transform: uppercase;
 }
+/* 프로필 설정 스타일 */
+.profile-settings {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+.current-profile {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.profile-preview {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.preview-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.profile-info span {
+    font-size: 18px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.profile-info small {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.profile-edit {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+@media (min-width: 768px) {
+    .profile-settings {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+    }
+}
