@@ -23,7 +23,7 @@ const defaultExercises = [
 // Google API 설정 (실제 값으로 교체 필요)
 const GOOGLE_CONFIG = {
     API_KEY: 'AIzaSyB3wkHrjGvPaQ9PMhqEWn9lFH5MKlj-HjU',
-    CLIENT_ID: 'Y886853522136-7ribmoatipv0h8f31od3li642ej2knfj.apps.googleusercontent.com',
+    CLIENT_ID: '886853522136-7ribmoatipv0h8f31od3li642ej2knfj.apps.googleusercontent.com',
     DISCOVERY_DOC: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
     SCOPES: 'https://www.googleapis.com/auth/drive.file'
 };
