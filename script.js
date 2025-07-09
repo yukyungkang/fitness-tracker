@@ -28,7 +28,7 @@ const GOOGLE_CONFIG = {
     SCOPES: 'https://www.googleapis.com/auth/drive.file'
 };
 
-// Google API 콜백 함수들
+// Google API 콜백 함수들 (window 객체에 바로 할당)
 window.initGoogleApi = function() {
     console.log('Google API 스크립트 로드 완료');
     isGapiLoaded = true;
@@ -39,6 +39,13 @@ window.initGoogleGsi = function() {
     console.log('Google GSI 스크립트 로드 완료');
     isGsiLoaded = true;
     checkApiReady();
+};
+
+window.handleApiLoadError = function() {
+    console.log('Google API 로드 실패, 오프라인 모드로 전환');
+    setTimeout(() => {
+        showLoginScreenWithOfflineOption();
+    }, 1000);
 };
 
 function checkApiReady() {
@@ -52,23 +59,13 @@ function checkApiReady() {
 document.addEventListener('DOMContentLoaded', function() {
     showLoadingScreen();
     
-    // Google API가 이미 로드되어 있는지 확인
-    if (typeof gapi !== 'undefined') {
-        isGapiLoaded = true;
-    }
-    if (typeof google !== 'undefined') {
-        isGsiLoaded = true;
-    }
-    
     // 3초 후에도 API가 로드되지 않으면 오프라인 모드로 진행
     setTimeout(() => {
         if (!isGapiLoaded || !isGsiLoaded) {
-            console.log('Google API 로드 실패, 오프라인 모드로 진행');
+            console.log('Google API 로드 시간 초과, 오프라인 모드로 진행');
             showLoginScreenWithOfflineOption();
         }
-    }, 3000);
-    
-    checkApiReady();
+    }, 5000);
 });
 
 // 화면 전환 함수들
@@ -86,10 +83,13 @@ function showLoginScreen() {
 
 function showLoginScreenWithOfflineOption() {
     showLoginScreen();
-    // 오프라인 모드 버튼 표시
     const offlineBtn = document.getElementById('offlineBtn');
+    const offlineMessage = document.getElementById('offlineMessage');
     if (offlineBtn) {
-        offlineBtn.style.display = 'block';
+        offlineBtn.style.display = 'flex';
+    }
+    if (offlineMessage) {
+        offlineMessage.style.display = 'block';
     }
 }
 
@@ -104,93 +104,17 @@ function startOfflineMode() {
     console.log('오프라인 모드로 시작');
     currentUser = {
         id: 'offline_user',
-        name: '오프라인 사용자',
-        email: 'offline@local',
-        picture: '' // 빈 문자열로 설정
+        name: '오프라인 사용자
+                email: 'offline@local',
+        picture: generateDefaultAvatar('오프라인 사용자')
     };
     isSignedIn = false;
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     showAppScreen();
     initializeApp();
 }
-function updateUserUI() {
-    if (currentUser) {
-        const userName = document.getElementById('userName');
-        const userPhoto = document.getElementById('userPhoto');
-        
-        if (userName) userName.textContent = currentUser.name;
-        
-        if (userPhoto) {
-            // 이미지 숨기고 CSS로 처리하도록 설정
-            userPhoto.style.display = 'none';
-            
-            // 부모 요소에 사용자 이름 첫 글자를 data 속성으로 추가
-            const userInfo = userPhoto.closest('.user-info');
-            if (userInfo) {
-                userInfo.setAttribute('data-user-initial', currentUser.name.charAt(0).toUpperCase());
-                userInfo.classList.add('no-photo');
-            }
-        }
-        updateLastSyncTime();
-    }
-}
 
-// updateUserProfile 함수 ⬇️
-function updateUserProfile() {
-    const newName = document.getElementById('editUserName').value.trim();
-    
-    if (!newName) {
-        alert('이름을 입력해주세요.');
-        return;
-    }
-    
-    if (newName.length < 2) {
-        alert('이름은 2글자 이상 입력해주세요.');
-        return;
-    }
-    
-    // 현재 사용자 정보 업데이트
-    if (currentUser) {
-        currentUser.name = newName;
-        currentUser.picture = generateDefaultAvatar(newName);
-        
-        // localStorage에 저장
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        // UI 업데이트
-        updateUserUI();
-        updateProfilePreview();
-        
-        // 입력 필드 초기화
-        document.getElementById('editUserName').value = '';
-        
-        // 성공 메시지
-        alert('✅ 프로필이 업데이트되었습니다!');
-        
-        // 클라우드 동기화 (온라인 모드인 경우)
-        if (isSignedIn) {
-            saveToGoogleDrive();
-        }
-    }
-}
-function updateProfilePreview() {
-    if (currentUser) {
-        const currentUserName = document.getElementById('currentUserName');
-        const currentUserEmail = document.getElementById('currentUserEmail');
-        const previewAvatar = document.getElementById('previewAvatar');
-        
-        if (currentUserName) currentUserName.textContent = currentUser.name;
-        if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
-        if (previewAvatar) {
-            previewAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
-            
-            // 색상도 업데이트
-            const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
-            const color = colors[currentUser.name.length % colors.length];
-            previewAvatar.style.background = `linear-gradient(135deg, ${color} 0%, #764ba2 100%)`;
-        }
-    }
-// Google API 초기화 개선
+// Google API 초기화
 function initializeGoogleAPI() {
     console.log('Google API 초기화 시작...');
     
@@ -224,6 +148,17 @@ function checkExistingLogin() {
     if (savedUser) {
         try {
             currentUser = JSON.parse(savedUser);
+            
+            // 잘못된 프로필 이미지 URL 수정
+            if (currentUser.picture && (
+                currentUser.picture.includes('placeholder') ||
+                currentUser.picture.includes('via.placeholder') ||
+                (!currentUser.picture.startsWith('http') && !currentUser.picture.startsWith('data:'))
+            )) {
+                currentUser.picture = generateDefaultAvatar(currentUser.name || '사용자');
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
             if (currentUser.id !== 'offline_user') {
                 isSignedIn = true;
                 console.log('기존 온라인 사용자 복원');
@@ -244,11 +179,6 @@ function checkExistingLogin() {
 }
 
 function setupGoogleSignIn() {
-    if (!isGsiLoaded) {
-        console.warn('GSI가 로드되지 않음');
-        return;
-    }
-    
     const signInBtn = document.getElementById('googleSignInBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const offlineBtn = document.getElementById('offlineBtn');
@@ -264,17 +194,16 @@ function setupGoogleSignIn() {
     }
 }
 
-// 로그인 처리 개선
+// 로그인 처리
 async function handleSignIn() {
     try {
         showSyncStatus('로그인 중...', 'syncing');
         
-        // 실제 Google 로그인 대신 모의 로그인
         const mockUser = {
             id: 'demo_user_' + Date.now(),
             name: '데모 사용자',
             email: 'demo@example.com',
-            picture: 'https://via.placeholder.com/150/4ECDC4/ffffff?text=USER'
+            picture: generateDefaultAvatar('데모 사용자')
         };
         
         currentUser = mockUser;
@@ -307,6 +236,82 @@ async function handleSignOut() {
             showLoginScreen();
         } catch (error) {
             console.error('로그아웃 중 오류:', error);
+        }
+    }
+}
+
+function updateUserUI() {
+    if (currentUser) {
+        const userName = document.getElementById('userName');
+        const userPhoto = document.getElementById('userPhoto');
+        
+        if (userName) userName.textContent = currentUser.name;
+        
+        if (userPhoto) {
+            if (currentUser.picture && 
+                (currentUser.picture.startsWith('http') || currentUser.picture.startsWith('data:'))) {
+                userPhoto.src = currentUser.picture;
+                userPhoto.onerror = function() {
+                    this.src = generateDefaultAvatar(currentUser.name || '사용자');
+                    this.onerror = null;
+                };
+            } else {
+                userPhoto.src = generateDefaultAvatar(currentUser.name || '사용자');
+            }
+        }
+        
+        updateLastSyncTime();
+    }
+}
+
+// 사용자 프로필 업데이트
+function updateUserProfile() {
+    const newName = document.getElementById('editUserName').value.trim();
+    
+    if (!newName) {
+        alert('이름을 입력해주세요.');
+        return;
+    }
+    
+    if (newName.length < 2) {
+        alert('이름은 2글자 이상 입력해주세요.');
+        return;
+    }
+    
+    if (currentUser) {
+        currentUser.name = newName;
+        currentUser.picture = generateDefaultAvatar(newName);
+        
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        updateUserUI();
+        updateProfilePreview();
+        
+        document.getElementById('editUserName').value = '';
+        
+        alert('✅ 프로필이 업데이트되었습니다!');
+        
+        if (isSignedIn) {
+            saveToGoogleDrive();
+        }
+    }
+}
+
+// 프로필 미리보기 업데이트
+function updateProfilePreview() {
+    if (currentUser) {
+        const currentUserName = document.getElementById('currentUserName');
+        const currentUserEmail = document.getElementById('currentUserEmail');
+        const previewAvatar = document.getElementById('previewAvatar');
+        
+        if (currentUserName) currentUserName.textContent = currentUser.name;
+        if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
+        if (previewAvatar) {
+            previewAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+            
+            const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
+            const color = colors[currentUser.name.length % colors.length];
+            previewAvatar.style.background = `linear-gradient(135deg, ${color} 0%, #764ba2 100%)`;
         }
     }
 }
@@ -347,7 +352,6 @@ async function saveToGoogleDrive() {
             version: '1.0'
         };
         
-        // 실제 Google Drive 대신 로컬 스토리지에 백업
         localStorage.setItem('cloudBackup', JSON.stringify(data));
         localStorage.setItem('lastSyncTime', new Date().toISOString());
         
@@ -449,7 +453,7 @@ function setupEventListeners() {
         downloadBackupBtn.addEventListener('click', downloadLocalBackup);
     }
     
-    // 여기에 추가 ⬇️
+    // 프로필 이름 입력 실시간 미리보기
     const editUserName = document.getElementById('editUserName');
     if (editUserName) {
         editUserName.addEventListener('input', function() {
@@ -894,7 +898,7 @@ function updateProgressBars(weeklyWorkouts, todaySteps) {
     }
 
     const dailyGoal = 10000;
-    const dailyProgress = Math.min((todaySteps / dailyGoal) * 100, 100);
+    const dailyProgress = Math.min((todaySteps / dailyGoal    ) * 100, 100);
     const dailyStepsProgressElement = document.getElementById('dailyStepsProgress');
     const dailyStepsTextElement = document.getElementById('dailyStepsText');
     
@@ -1514,7 +1518,8 @@ function formatDateShort(dateString) {
     const date = new Date(dateString);
     return (date.getMonth() + 1) + '/' + date.getDate();
 }
-// generateDefaultAvatar 함수 ⬇️
+
+// 기본 아바타 생성 함수
 function generateDefaultAvatar(name) {
     const initial = name.charAt(0).toUpperCase();
     const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
@@ -1529,6 +1534,7 @@ function generateDefaultAvatar(name) {
     
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
+
 // 이벤트 리스너들
 window.onclick = function(event) {
     const modal = document.getElementById('addExerciseModal');
