@@ -55,39 +55,25 @@ function showAppScreen() {
 
 // Google API 초기화
 function initializeGoogleAPI() {
-    let gapiLoadPromise = new Promise((resolve, reject) => {
-        if (typeof gapi !== 'undefined') {
-            gapi.load('client', async () => {
-                try {
-                    await initializeGapiClient();
-                    resolve();
-                } catch (error) {
-                    reject(error);
-                }
-            });
-        } else {
-            reject(new Error('GAPI not loaded'));
-        }
-    });
-
-    let gsiLoadPromise = new Promise((resolve) => {
-        if (typeof google !== 'undefined') {
-            isGsiLoaded = true;
-            resolve();
-        } else {
-            // GSI 로드 재시도
-            setTimeout(() => {
-                if (typeof google !== 'undefined') {
-                    isGsiLoaded = true;
-                    resolve();
-                } else {
-                    console.warn('GSI not loaded, using mock authentication');
-                    isGsiLoaded = true;
-                    resolve();
-                }
-            }, 1000);
-        }
-    });
+    console.log('Google API 초기화 시작...');
+    
+    // 단계별로 초기화하여 디버깅 용이하게 변경
+    initializeGapi()
+        .then(() => {
+            console.log('GAPI 초기화 완료');
+            return initializeGsi();
+        })
+        .then(() => {
+            console.log('GSI 초기화 완료');
+            console.log('모든 API 초기화 완료!');
+            checkInitComplete();
+        })
+        .catch((error) => {
+            console.error('API 초기화 실패:', error);
+            // 초기화 실패해도 로그인 화면으로 이동
+            showLoginScreen();
+        });
+}
 
     Promise.all([gapiLoadPromise, gsiLoadPromise])
         .then(() => {
@@ -101,23 +87,55 @@ function initializeGoogleAPI() {
 }
 
 // GAPI 클라이언트 초기화
-async function initializeGapiClient() {
-    console.log('GAPI 초기화 시작...');
-    try {
-        await gapi.client.init({
-            apiKey: GOOGLE_CONFIG.API_KEY,
-            clientId: GOOGLE_CONFIG.CLIENT_ID,
-            discoveryDocs: [GOOGLE_CONFIG.DISCOVERY_DOC],
-            scope: GOOGLE_CONFIG.SCOPES
-        });
-        
-        console.log('GAPI 초기화 완료!');
-        isGapiLoaded = true;
-        return Promise.resolve();
-    } catch (error) {
-        console.error('GAPI initialization failed:', error);
-        return Promise.reject(error);
-    }
+function initializeGapi() {
+    return new Promise((resolve, reject) => {
+        if (typeof gapi !== 'undefined') {
+            console.log('GAPI 로드 확인됨');
+            gapi.load('client', async () => {
+                try {
+                    console.log('GAPI client 로드 완료, 초기화 시작...');
+                    await gapi.client.init({
+                        apiKey: GOOGLE_CONFIG.API_KEY,
+                        clientId: GOOGLE_CONFIG.CLIENT_ID,
+                        discoveryDocs: [GOOGLE_CONFIG.DISCOVERY_DOC],
+                        scope: GOOGLE_CONFIG.SCOPES
+                    });
+                    
+                    console.log('GAPI client 초기화 완료!');
+                    isGapiLoaded = true;
+                    resolve();
+                } catch (error) {
+                    console.error('GAPI client 초기화 실패:', error);
+                    reject(error);
+                }
+            });
+        } else {
+            console.error('GAPI 스크립트가 로드되지 않음');
+            reject(new Error('GAPI not loaded'));
+        }
+    });
+}
+// GSI 초기화를 별도 함수로 분리
+function initializeGsi() {
+    return new Promise((resolve) => {
+        if (typeof google !== 'undefined' && google.accounts) {
+            console.log('GSI 로드 확인됨');
+            isGsiLoaded = true;
+            resolve();
+        } else {
+            console.warn('GSI 로드되지 않음, 1초 후 재시도...');
+            setTimeout(() => {
+                if (typeof google !== 'undefined' && google.accounts) {
+                    console.log('GSI 재시도 성공');
+                    isGsiLoaded = true;
+                } else {
+                    console.warn('GSI 최종 로드 실패, 모의 인증 사용');
+                    isGsiLoaded = true; // 모의 인증으로 진행
+                }
+                resolve();
+            }, 1000);
+        }
+    });
 }
 
 // 초기화 완료 확인
