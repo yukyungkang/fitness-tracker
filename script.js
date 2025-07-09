@@ -134,6 +134,62 @@ function updateUserUI() {
         updateLastSyncTime();
     }
 }
+
+// updateUserProfile 함수 ⬇️
+function updateUserProfile() {
+    const newName = document.getElementById('editUserName').value.trim();
+    
+    if (!newName) {
+        alert('이름을 입력해주세요.');
+        return;
+    }
+    
+    if (newName.length < 2) {
+        alert('이름은 2글자 이상 입력해주세요.');
+        return;
+    }
+    
+    // 현재 사용자 정보 업데이트
+    if (currentUser) {
+        currentUser.name = newName;
+        currentUser.picture = generateDefaultAvatar(newName);
+        
+        // localStorage에 저장
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // UI 업데이트
+        updateUserUI();
+        updateProfilePreview();
+        
+        // 입력 필드 초기화
+        document.getElementById('editUserName').value = '';
+        
+        // 성공 메시지
+        alert('✅ 프로필이 업데이트되었습니다!');
+        
+        // 클라우드 동기화 (온라인 모드인 경우)
+        if (isSignedIn) {
+            saveToGoogleDrive();
+        }
+    }
+}
+function updateProfilePreview() {
+    if (currentUser) {
+        const currentUserName = document.getElementById('currentUserName');
+        const currentUserEmail = document.getElementById('currentUserEmail');
+        const previewAvatar = document.getElementById('previewAvatar');
+        
+        if (currentUserName) currentUserName.textContent = currentUser.name;
+        if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
+        if (previewAvatar) {
+            previewAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+            
+            // 색상도 업데이트
+            const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
+            const color = colors[currentUser.name.length % colors.length];
+            previewAvatar.style.background = `linear-gradient(135deg, ${color} 0%, #764ba2 100%)`;
+        }
+    }
 // Google API 초기화 개선
 function initializeGoogleAPI() {
     console.log('Google API 초기화 시작...');
@@ -378,6 +434,7 @@ async function initializeApp() {
     setupEventListeners();
     updateAll();
     updateUserUI();
+    updateProfilePreview();
 }
 
 function setupEventListeners() {
@@ -390,6 +447,23 @@ function setupEventListeners() {
     }
     if (downloadBackupBtn) {
         downloadBackupBtn.addEventListener('click', downloadLocalBackup);
+    }
+    
+    // 여기에 추가 ⬇️
+    const editUserName = document.getElementById('editUserName');
+    if (editUserName) {
+        editUserName.addEventListener('input', function() {
+            const newName = this.value.trim();
+            if (newName.length > 0) {
+                const previewAvatar = document.getElementById('previewAvatar');
+                if (previewAvatar) {
+                    previewAvatar.textContent = newName.charAt(0).toUpperCase();
+                    const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
+                    const color = colors[newName.length % colors.length];
+                    previewAvatar.style.background = `linear-gradient(135deg, ${color} 0%, #764ba2 100%)`;
+                }
+            }
+        });
     }
 }
 
@@ -1440,7 +1514,21 @@ function formatDateShort(dateString) {
     const date = new Date(dateString);
     return (date.getMonth() + 1) + '/' + date.getDate();
 }
-
+// generateDefaultAvatar 함수 ⬇️
+function generateDefaultAvatar(name) {
+    const initial = name.charAt(0).toUpperCase();
+    const colors = ['#667eea', '#764ba2', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B'];
+    const color = colors[name.length % colors.length];
+    
+    const svg = `
+        <svg width="45" height="45" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22.5" cy="22.5" r="22.5" fill="${color}"/>
+            <text x="22.5" y="30" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Arial">${initial}</text>
+        </svg>
+    `;
+    
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
 // 이벤트 리스너들
 window.onclick = function(event) {
     const modal = document.getElementById('addExerciseModal');
