@@ -477,8 +477,8 @@
     </div>
 </div>
     <!-- Google API 스크립트를 동적으로 로드 -->
-    <script async defer src="https://apis.google.com/js/api.js" onload="initGoogleApi()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="initGoogleGsi()"></script>
     <script src="script.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="window.initGoogleApi && window.initGoogleApi()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="window.initGoogleGsi && window.initGoogleGsi()"></script>
 </body>
 </html>
