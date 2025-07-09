@@ -53,11 +53,10 @@ function showAppScreen() {
     document.getElementById('appScreen').style.display = 'block';
 }
 
-// Google API 초기화
+// Google API 초기화 - 개선된 버전
 function initializeGoogleAPI() {
     console.log('Google API 초기화 시작...');
     
-    // 단계별로 초기화하여 디버깅 용이하게 변경
     initializeGapi()
         .then(() => {
             console.log('GAPI 초기화 완료');
@@ -70,22 +69,11 @@ function initializeGoogleAPI() {
         })
         .catch((error) => {
             console.error('API 초기화 실패:', error);
-            // 초기화 실패해도 로그인 화면으로 이동
             showLoginScreen();
         });
 }
 
-    Promise.all([gapiLoadPromise, gsiLoadPromise])
-        .then(() => {
-            console.log('모든 API 초기화 완료');
-            checkInitComplete();
-        })
-        .catch((error) => {
-            console.error('API 초기화 실패:', error);
-            showLoginScreen();
-        });
-
-// GAPI 클라이언트 초기화
+// GAPI 초기화를 별도 함수로 분리
 function initializeGapi() {
     return new Promise((resolve, reject) => {
         if (typeof gapi !== 'undefined') {
@@ -114,6 +102,7 @@ function initializeGapi() {
         }
     });
 }
+
 // GSI 초기화를 별도 함수로 분리
 function initializeGsi() {
     return new Promise((resolve) => {
@@ -129,7 +118,7 @@ function initializeGsi() {
                     isGsiLoaded = true;
                 } else {
                     console.warn('GSI 최종 로드 실패, 모의 인증 사용');
-                    isGsiLoaded = true; // 모의 인증으로 진행
+                    isGsiLoaded = true;
                 }
                 resolve();
             }, 1000);
@@ -145,7 +134,6 @@ function checkInitComplete() {
         console.log('모든 API 준비 완료, 로그인 설정 시작...');
         setupGoogleSignIn();
         
-        // 기존 로그인 상태 확인
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             try {
@@ -186,7 +174,6 @@ async function handleSignIn() {
     try {
         showSyncStatus('로그인 중...', 'syncing');
         
-        // 임시 사용자 정보 (실제로는 Google OAuth 2.0 사용)
         const mockUser = {
             id: 'user123',
             name: '홍길동',
@@ -197,17 +184,12 @@ async function handleSignIn() {
         currentUser = mockUser;
         isSignedIn = true;
         
-        // 사용자 정보 저장
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
-        // UI 전환
         showAppScreen();
         updateUserUI();
         
-        // 앱 초기화
         await initializeApp();
-        
-        // 클라우드에서 데이터 로드
         await loadFromGoogleDrive();
         
         showSyncStatus('동기화됨', 'synced');
@@ -222,15 +204,12 @@ async function handleSignIn() {
 async function handleSignOut() {
     if (confirm('로그아웃하시겠습니까? 로컬 데이터는 유지됩니다.')) {
         try {
-            // 마지막으로 데이터 동기화
             await saveToGoogleDrive();
             
-            // 로그아웃 처리
             currentUser = null;
             isSignedIn = false;
             localStorage.removeItem('currentUser');
             
-            // UI 전환
             showLoginScreen();
         } catch (error) {
             console.error('로그아웃 중 오류:', error);
@@ -291,7 +270,6 @@ async function saveToGoogleDrive() {
             version: '1.0'
         };
         
-        // 실제 구현에서는 Google Drive API 사용
         localStorage.setItem('cloudBackup', JSON.stringify(data));
         localStorage.setItem('lastSyncTime', new Date().toISOString());
         
@@ -375,22 +353,14 @@ function updateLastSyncTime() {
 
 // 앱 초기화
 async function initializeApp() {
-    // 오늘 날짜 설정
     const dateInput = document.getElementById('date');
     if (dateInput) {
         dateInput.valueAsDate = new Date();
     }
     
-    // 운동 목록 초기화
     initializeExercises();
-    
-    // 이벤트 리스너 등록
     setupEventListeners();
-    
-    // UI 업데이트
     updateAll();
-    
-    // 사용자 UI 업데이트
     updateUserUI();
 }
 
@@ -398,7 +368,6 @@ async function initializeApp() {
 function setupEventListeners() {
     setupBasicEventListeners();
     
-    // 동기화 관련 이벤트 리스너
     const manualSyncBtn = document.getElementById('manualSyncBtn');
     const downloadBackupBtn = document.getElementById('downloadBackupBtn');
     
@@ -412,7 +381,6 @@ function setupEventListeners() {
 
 // 기본 이벤트 리스너 설정
 function setupBasicEventListeners() {
-    // 운동 종류 선택 시 세부 필드 표시
     const exerciseType = document.getElementById('exerciseType');
     if (exerciseType) {
         exerciseType.addEventListener('change', function() {
@@ -422,7 +390,6 @@ function setupBasicEventListeners() {
             if (this.value) {
                 exerciseFields.classList.add('show');
                 
-                // 선택된 운동이 거리 기록이 필요한지 확인
                 const selectedExercise = getAllExercises().find(ex => ex.name === this.value);
                 if (selectedExercise && selectedExercise.hasDistance) {
                     distanceField.style.display = 'block';
@@ -436,7 +403,6 @@ function setupBasicEventListeners() {
         });
     }
     
-       // 필터 이벤트 리스너
     const filterDate = document.getElementById('filterDate');
     const filterExercise = document.getElementById('filterExercise');
     const filterKeyword = document.getElementById('filterKeyword');
@@ -445,7 +411,6 @@ function setupBasicEventListeners() {
     if (filterExercise) filterExercise.addEventListener('change', applyFilters);
     if (filterKeyword) filterKeyword.addEventListener('input', applyFilters);
     
-    // 폼 제출 처리
     const recordForm = document.getElementById('recordForm');
     if (recordForm) {
         recordForm.addEventListener('submit', async function(e) {
@@ -466,12 +431,10 @@ function setupBasicEventListeners() {
             records.unshift(newRecord);
             localStorage.setItem('fitnessRecords', JSON.stringify(records));
             
-            // 클라우드 동기화
             if (isSignedIn) {
                 await saveToGoogleDrive();
             }
             
-            // 폼 초기화
             document.getElementById('recordForm').reset();
             document.getElementById('date').valueAsDate = new Date();
             document.getElementById('exerciseFields').classList.remove('show');
@@ -479,12 +442,10 @@ function setupBasicEventListeners() {
             updateAll();
             alert('기록이 저장되었습니다! 💪');
             
-            // 대시보드 탭으로 이동
             switchTab('dashboard');
         });
     }
     
-    // 파일 입력 이벤트
     const importFile = document.getElementById('importFile');
     if (importFile) {
         importFile.addEventListener('change', function(e) {
@@ -506,7 +467,6 @@ function setupBasicEventListeners() {
                             
                             updateAll();
                             
-                            // 클라우드 동기화
                             if (isSignedIn) {
                                 saveToGoogleDrive();
                             }
@@ -560,7 +520,6 @@ function getAllExercises() {
 function updateExerciseSelects() {
     const exercises = getAllExercises();
     
-    // 기록 입력 탭의 선택 박스
     const exerciseSelect = document.getElementById('exerciseType');
     if (exerciseSelect) {
         exerciseSelect.innerHTML = '<option value="">선택하세요</option>';
@@ -572,7 +531,6 @@ function updateExerciseSelects() {
         });
     }
     
-    // 필터의 선택 박스
     const filterSelect = document.getElementById('filterExercise');
     if (filterSelect) {
         filterSelect.innerHTML = '<option value="">전체</option>';
@@ -606,23 +564,19 @@ function updateExerciseList() {
 
 // 탭 전환 함수
 function switchTab(tabName) {
-    // 모든 탭 버튼과 콘텐츠를 비활성화
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    // 현재 클릭된 버튼 찾기
     const clickedButton = event ? event.target : document.querySelector(`[onclick="switchTab('${tabName}')"]`);
     if (clickedButton) {
         clickedButton.classList.add('active');
     }
     
-    // 선택된 탭 활성화
     const tabContent = document.getElementById(tabName);
     if (tabContent) {
         tabContent.classList.add('active');
     }
     
-    // 그래프 탭이 선택되면 그래프 업데이트
     if (tabName === 'charts') {
         setTimeout(updateCharts, 100);
     }
@@ -656,7 +610,6 @@ async function addExerciseFromModal() {
         return;
     }
     
-    // 중복 확인
     const allExercises = getAllExercises();
     if (allExercises.some(ex => ex.name === name)) {
         alert('이미 존재하는 운동입니다.');
@@ -672,7 +625,6 @@ async function addExerciseFromModal() {
     customExercises.push(newExercise);
     localStorage.setItem('customExercises', JSON.stringify(customExercises));
     
-    // 클라우드 동기화
     if (isSignedIn) {
         await saveToGoogleDrive();
     }
@@ -692,7 +644,6 @@ async function addNewExercise() {
         return;
     }
     
-    // 중복 확인
     const allExercises = getAllExercises();
     if (allExercises.some(ex => ex.name === name)) {
         alert('이미 존재하는 운동입니다.');
@@ -708,12 +659,10 @@ async function addNewExercise() {
     customExercises.push(newExercise);
     localStorage.setItem('customExercises', JSON.stringify(customExercises));
     
-    // 입력 필드 초기화
     document.getElementById('newExerciseName').value = '';
     document.getElementById('newExerciseIcon').value = '';
     document.getElementById('newExerciseDistance').checked = false;
     
-    // 클라우드 동기화
     if (isSignedIn) {
         await saveToGoogleDrive();
     }
@@ -727,7 +676,6 @@ async function removeCustomExercise(index) {
         customExercises.splice(index, 1);
         localStorage.setItem('customExercises', JSON.stringify(customExercises));
         
-        // 클라우드 동기화
         if (isSignedIn) {
             await saveToGoogleDrive();
         }
@@ -750,7 +698,6 @@ async function clearAllData() {
             localStorage.removeItem('fitnessRecords');
             localStorage.removeItem('customExercises');
             
-            // 클라우드에서도 삭제
             if (isSignedIn) {
                 await saveToGoogleDrive();
             }
@@ -767,7 +714,6 @@ async function deleteRecord(id) {
         records = records.filter(record => record.id !== id);
         localStorage.setItem('fitnessRecords', JSON.stringify(records));
         
-        // 클라우드 동기화
         if (isSignedIn) {
             await saveToGoogleDrive();
         }
@@ -814,7 +760,6 @@ function updateAll() {
     updateStats();
     updateCharts();
     
-    // 총 기록 수 업데이트
     const totalRecordsCount = document.getElementById('totalRecordsCount');
     if (totalRecordsCount) {
         totalRecordsCount.textContent = records.length;
@@ -832,12 +777,10 @@ function updateStats() {
     const totalCalories = records.filter(r => r.calories).reduce((sum, r) => sum + r.calories, 0);
     const totalDistance = records.filter(r => r.distance).reduce((sum, r) => sum + r.distance, 0);
     
-    // 걸음수 통계
     const stepsRecords = records.filter(r => r.steps);
     const totalSteps = stepsRecords.reduce((sum, r) => sum + r.steps, 0);
     const avgSteps = stepsRecords.length > 0 ? Math.round(totalSteps / stepsRecords.length) : 0;
     
-    // 기본 통계 업데이트
     const totalExerciseTimeElement = document.getElementById('totalExerciseTime');
     const totalCaloriesElement = document.getElementById('totalCalories');
     const totalDistanceElement = document.getElementById('totalDistance');
@@ -850,7 +793,6 @@ function updateStats() {
     if (totalStepsElement) totalStepsElement.textContent = totalSteps.toLocaleString();
     if (avgStepsElement) avgStepsElement.textContent = avgSteps.toLocaleString();
     
-    // 체중 관련
     if (weightRecords.length > 0) {
         const currentWeight = weightRecords[0];
         const currentWeightElement = document.getElementById('currentWeight');
@@ -861,12 +803,11 @@ function updateStats() {
             const changeElement = document.getElementById('weightChange');
             if (changeElement) {
                 changeElement.textContent = (weightChange > 0 ? '+' : '') + weightChange.toFixed(1);
-                changeElement.style.color = weightChange > 0 ? '#ff6b6b' : '#4ecdc4';
+                                changeElement.style.color = weightChange > 0 ? '#ff6b6b' : '#4ecdc4';
             }
         }
     }
     
-    // 대시보드 통계 업데이트
     updateDashboardStats();
 }
 
@@ -893,13 +834,8 @@ function updateDashboardStats() {
     const weeklyWorkoutCountElement = document.getElementById('weeklyWorkoutCount');
     if (weeklyWorkoutCountElement) weeklyWorkoutCountElement.textContent = weeklyWorkouts;
     
-    // 진행률 업데이트
     updateProgressBars(weeklyWorkouts, todaySteps);
-    
-    // 운동 스트릭 업데이트
     updateStreak();
-    
-    // 스트릭 달력 업데이트
     updateStreakCalendar();
 }
 
@@ -1197,7 +1133,8 @@ function updateCalorieChart() {
             responsive: true,
             maintainAspectRatio: false,
             interaction: {
-                intersect: false,                mode: 'index'
+                intersect: false,
+                mode: 'index'
             },
             scales: {
                 y: {
