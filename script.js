@@ -106,12 +106,41 @@ function startOfflineMode() {
         id: 'offline_user',
         name: '오프라인 사용자',
         email: 'offline@local',
-        picture: 'https://via.placeholder.com/150/667eea/ffffff?text=OFF'
+        picture: '' // 빈 문자열로 설정
     };
-    isSignedIn = false; // 오프라인이므로 false
+    isSignedIn = false;
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     showAppScreen();
     initializeApp();
+}
+function updateUserUI() {
+    if (currentUser) {
+        const userName = document.getElementById('userName');
+        const userPhoto = document.getElementById('userPhoto');
+        
+        if (userName) userName.textContent = currentUser.name;
+        if (userPhoto) {
+            if (currentUser.picture && currentUser.picture !== '') {
+                userPhoto.src = currentUser.picture;
+                userPhoto.style.display = 'block';
+            } else {
+                // 이미지 대신 배경과 텍스트로 아바타 만들기
+                userPhoto.style.display = 'none';
+                userPhoto.parentElement.innerHTML = `
+                    <div class="user-avatar-text">
+                        ${currentUser.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">${currentUser.name}</span>
+                        <button id="signOutBtn" class="sign-out-btn">로그아웃</button>
+                    </div>
+                `;
+                // 로그아웃 버튼 이벤트 재설정
+                document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
+            }
+        }
+        updateLastSyncTime();
+    }
 }
 
 // Google API 초기화 개선
