@@ -2,9 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ✅ Firebase 설정
+// ✅ Firebase 설정 (올바른 API 키)
 const firebaseConfig = {
-  apiKey: "AIzaSyBasJig37TExc76J3mlcJ9p5uZLXFrY5CQ",
+  apiKey: "AIzaSyBasJig37TExc76J3mlcJ9p5uZLXFrY5CQ", // 콘솔에서 확인된 실제 키
   authDomain: "dietpage-5f49a.firebaseapp.com",
   projectId: "dietpage-5f49a",
   storageBucket: "dietpage-5f49a.firebasestorage.app",
@@ -40,21 +40,18 @@ function showToast(msg) {
   }, 3000);
 }
 
-// ✅ 탭 전환 함수 (전역으로 선언)
+// ✅ 탭 전환 함수
 function switchTab(tabName) {
   console.log('탭 전환:', tabName);
   
-  // 모든 탭 버튼 비활성화
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.remove('active');
   });
   
-  // 모든 섹션 숨기기
   document.querySelectorAll('section').forEach(section => {
     section.classList.remove('active');
   });
   
-  // 선택된 탭 활성화
   const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
   const selectedSection = document.getElementById(tabName);
   
@@ -68,7 +65,28 @@ function switchTab(tabName) {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM 로드 완료');
   
-  // ✅ 탭 메뉴 이벤트 (강제로 다시 바인딩)
+  // ✅ 요소 존재 확인
+  const loginBtn = document.getElementById('loginBtn');
+  const userSection = document.getElementById('userSection');
+  const authSection = document.querySelector('.auth-section');
+  
+  console.log('로그인 버튼:', loginBtn);
+  console.log('사용자 섹션:', userSection);
+  console.log('인증 섹션:', authSection);
+  
+  // ✅ 초기 상태 강제 설정
+  if (loginBtn) {
+    loginBtn.style.display = 'block';
+    loginBtn.style.visibility = 'visible';
+    console.log('로그인 버튼 강제 표시');
+  }
+  
+  if (userSection) {
+    userSection.style.display = 'none';
+    console.log('사용자 섹션 강제 숨김');
+  }
+  
+  // ✅ 탭 메뉴 이벤트
   const tabButtons = document.querySelectorAll('.tab-btn');
   console.log('탭 버튼 개수:', tabButtons.length);
   
@@ -82,9 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
       switchTab(this.dataset.tab);
     });
   });
-  
+
   // ✅ DOM 요소 참조
-  const loginBtn = document.getElementById('loginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const userInfo = document.getElementById('userInfo');
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
@@ -106,13 +123,17 @@ document.addEventListener('DOMContentLoaded', function() {
   if (loginBtn) {
     loginBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+      console.log('로그인 버튼 클릭됨');
+      
       try {
+        showToast("🔄 로그인 시도 중...");
         await setPersistence(auth, browserLocalPersistence);
         const res = await signInWithPopup(auth, provider);
         currentUser = res.user;
+        console.log('로그인 성공:', currentUser.displayName);
         showToast("✅ 로그인 성공!");
       } catch (error) {
-        console.error(error.message);
+        console.error('로그인 오류:', error);
         showToast("❌ 로그인 실패: " + error.message);
       }
     });
@@ -121,8 +142,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // ✅ 로그아웃 이벤트
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
-      await signOut(auth);
-      showToast("로그아웃 완료!");
+      console.log('로그아웃 버튼 클릭됨');
+      try {
+        await signOut(auth);
+        showToast("로그아웃 완료!");
+      } catch (error) {
+        console.error('로그아웃 오류:', error);
+      }
     });
   }
 
@@ -212,46 +238,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ✅ 로그인 상태 감지
   onAuthStateChanged(auth, async (user) => {
-  console.log('로그인 상태 변경:', user ? '로그인됨' : '로그아웃됨');
-  
-  const loginBtn = document.getElementById('loginBtn');
-  const userSection = document.getElementById('userSection');
-  const userInfo = document.getElementById('userInfo');
-  
-  if (user) {
-    currentUser = user;
-    console.log('사용자 정보:', currentUser.displayName);
+    console.log('🔄 로그인 상태 변경:', user ? '로그인됨' : '로그아웃됨');
     
-    if (userInfo) userInfo.textContent = `정보: ${currentUser.displayName}`;
-    if (loginBtn) {
-      loginBtn.style.display = 'none';
-      console.log('로그인 버튼 숨김');
+    if (user) {
+      currentUser = user;
+      console.log('✅ 사용자 정보:', currentUser.displayName);
+      
+      if (userInfo) userInfo.textContent = `정보: ${currentUser.displayName}`;
+      if (loginBtn) {
+        loginBtn.style.display = 'none';
+        console.log('🔒 로그인 버튼 숨김');
+      }
+      if (userSection) {
+        userSection.style.display = 'block';
+        console.log('👤 사용자 섹션 표시');
+      }
+      
+    } else {
+      currentUser = null;
+      console.log('❌ 로그아웃 상태');
+      
+      if (loginBtn) {
+        loginBtn.style.display = 'block';
+        loginBtn.style.visibility = 'visible';
+        console.log('🔓 로그인 버튼 표시');
+      }
+      if (userSection) {
+        userSection.style.display = 'none';
+        console.log('🚫 사용자 섹션 숨김');
+      }
+      if (userInfo) userInfo.textContent = '';
     }
-    if (userSection) {
-      userSection.style.display = 'block';
-      console.log('사용자 섹션 표시');
-    }
-    
-    // 데이터 로드 함수들이 있다면 여기서 호출
-    // await loadSettings();
-    // await loadWeights();
-    // await loadSettingsHistory();
-    
-  } else {
-    currentUser = null;
-    console.log('로그아웃 상태');
-    
-    if (loginBtn) {
-      loginBtn.style.display = 'block';
-      console.log('로그인 버튼 표시');
-    }
-    if (userSection) {
-      userSection.style.display = 'none';
-      console.log('사용자 섹션 숨김');
-    }
-    if (userInfo) userInfo.textContent = '';
-  }
-});
+  });
 
   // ✅ 초기 플랜 생성
   generatePlan(null, 28, 5);
