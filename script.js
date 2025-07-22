@@ -212,18 +212,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ✅ 로그인 상태 감지
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user;
-      if (userInfo) userInfo.textContent = `로그인: ${currentUser.displayName}`;
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (logoutBtn) logoutBtn.style.display = 'inline';
-    } else {
-      currentUser = null;
-      if (userInfo) userInfo.textContent = '';
-      if (loginBtn) loginBtn.style.display = 'inline';
-      if (logoutBtn) logoutBtn.style.display = 'none';
-    }
-  });
+  const loginBtn = document.getElementById('loginBtn');
+  const userSection = document.getElementById('userSection');
+  const userInfo = document.getElementById('userInfo');
+  
+  if (user) {
+    currentUser = user;
+    if (userInfo) userInfo.textContent = `정보: ${currentUser.displayName}`;
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userSection) userSection.style.display = 'block';
+  } else {
+    currentUser = null;
+    if (loginBtn) loginBtn.style.display = 'block';
+    if (userSection) userSection.style.display = 'none';
+  }
+});
 
   // ✅ 초기 플랜 생성
   generatePlan(null, 28, 5);
