@@ -4,7 +4,7 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, o
 
 // ✅ Firebase 설정
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // 🔒 실제 값 입력
+  apiKey: "YOUR_API_KEY", // 실제 Firebase 키 입력
   authDomain: "dietpage-5f49a.firebaseapp.com",
   projectId: "dietpage-5f49a",
   storageBucket: "dietpage-5f49a.firebasestorage.app",
@@ -32,7 +32,7 @@ function showToast(msg) {
   }, 3000);
 }
 
-// ✅ Tabs
+// ✅ Tabs (메뉴 전환)
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -213,7 +213,7 @@ function generatePlan(startDateStr, cycle, menstrual) {
 function renderPlanTable() {
   const tbody = document.getElementById('planTable');
   tbody.innerHTML = '';
-  planData.forEach((p, idx) => {
+  planData.forEach((p) => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${p.day}</td>
@@ -224,7 +224,9 @@ function renderPlanTable() {
       <td><input type="checkbox" ${p.morningDone ? 'checked' : ''}></td>
       <td><input type="checkbox" ${p.eveningDone ? 'checked' : ''}></td>
     `;
-    const [ , , , , , am, pm ] = row.querySelectorAll('input');
+    const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+    const am = checkboxes[0];
+    const pm = checkboxes[1];
     am.addEventListener('change', () => { p.morningDone = am.checked; updateProgress(); });
     pm.addEventListener('change', () => { p.eveningDone = pm.checked; updateProgress(); });
     tbody.appendChild(row);
@@ -243,8 +245,7 @@ function updateProgress() {
 
 // ✅ 체중 기록
 const weightTable = document.getElementById('weightTable');
-const addWeightBtn = document.getElementById('addWeightBtn');
-addWeightBtn.onclick = async () => {
+addWeightBtn.onclick = () => {
   const date = dateInput.value;
   const weight = parseFloat(weightInput.value);
   if (!date || !weight) return showToast("날짜와 체중 입력");
@@ -285,4 +286,3 @@ function drawWeightChart() {
     }
   });
 }
-
