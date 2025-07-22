@@ -87,37 +87,17 @@ th {
   font-weight: bold;
   margin-bottom: 10px;
 }
-@media(max-width:768px) {
-  nav button { font-size: 14px; }
-  table, thead, tbody, th, td, tr {
-    display: block;
-    width: 100%;
-  }
-  th { display: none; }
-  td {
-    padding: 10px;
-    border: none;
-    border-bottom: 1px solid #ccc;
-  }
-  td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    display: block;
-  }
-}
-
 #toastContainer {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1000;
+  z-index: 9999;
 }
-
 .toast {
   background: #333;
   color: #fff;
   padding: 12px 16px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   border-radius: 6px;
   opacity: 0;
   transform: translateX(100%);
