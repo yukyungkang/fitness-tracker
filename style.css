@@ -13,128 +13,203 @@ body {
   min-height: 100vh;
 }
 
-/* ✅ 헤더 개선 */
+/* ✅ PC/데스크톱용 헤더 */
 header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: #2c3e50;
-  padding: 20px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   position: sticky;
   top: 0;
-  z-index: 9999;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 60px;
 }
 
-header h1 {
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.logo-section h1 {
   font-size: 1.8rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
-/* ✅ 로그인 영역 개선 */
+/* ✅ 우측 상단 인증 섹션 */
 .auth-section {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  min-width: 150px;
+  align-items: center;
+  gap: 0;
 }
 
-#loginBtn {
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.login-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
 }
 
-#loginBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+.login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
 }
 
-#userSection {
-  display: none;
-  text-align: right;
-}
-
-#logoutBtn {
+.logout-btn {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 3px 12px rgba(255, 107, 107, 0.3);
+  font-size: 0.8rem;
+  padding: 6px 12px;
 }
 
-#logoutBtn:hover {
+.logout-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.6);
+  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.5);
 }
 
-#userInfo {
-  font-size: 12px;
-  color: #7f8c8d;
-  font-weight: 500;
+.btn-icon {
+  font-size: 1rem;
 }
 
-/* ✅ 네비게이션 메뉴 개선 */
-nav {
+.user-section {
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.user-name {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* ✅ PC용 상단 네비게이션 */
+.desktop-nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 76px;
+  z-index: 999;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 80px;
-  z-index: 9998;
-  padding: 10px 20px;
-  border-radius: 15px;
-  margin: 10px 20px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+  padding: 0 20px;
 }
 
-nav button {
-  flex: 1;
-  padding: 15px 20px;
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 24px;
   border: none;
-  cursor: pointer;
   background: transparent;
-  color: #7f8c8d;
-  font-weight: 600;
-  font-size: 14px;
-  border-radius: 10px;
-  margin: 0 5px;
+  cursor: pointer;
   transition: all 0.3s ease;
+  border-radius: 0;
   position: relative;
+  min-width: 100px;
 }
 
-nav button:hover {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  transform: translateY(-2px);
-}
-
-nav button.active {
+.nav-item::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-  transform: translateY(-2px);
+  transition: width 0.3s ease;
+}
+
+.nav-item:hover::before,
+.nav-item.active::before {
+  width: 70%;
+}
+
+.nav-icon {
+  font-size: 1.5rem;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
+}
+
+.nav-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b7280;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+  filter: grayscale(0%);
+  transform: scale(1.1);
+}
+
+.nav-item:hover .nav-text,
+.nav-item.active .nav-text {
+  color: #667eea;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+/* ✅ 모바일 하단 네비게이션 (기본적으로 숨김) */
+.mobile-bottom-nav {
+  display: none;
 }
 
 /* ✅ 메인 컨테이너 */
@@ -144,7 +219,7 @@ nav button.active {
   padding: 0 20px;
 }
 
-/* ✅ 섹션 스타일 개선 */
+/* ✅ 섹션 스타일 */
 section {
   display: none;
   background: rgba(255, 255, 255, 0.95);
@@ -194,7 +269,7 @@ section h2::after {
   border-radius: 2px;
 }
 
-/* ✅ 카드 컨테이너 개선 */
+/* ✅ 카드 컨테이너 */
 .card-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -258,21 +333,24 @@ section h2::after {
   font-weight: bold;
 }
 
-.red { 
+.red {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
 }
-.green { 
+
+.green {
   background: linear-gradient(135deg, #00d2d3 0%, #54a0ff 100%);
 }
-.yellow { 
+
+.yellow {
   background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
   color: #2c3e50;
 }
-.purple { 
+
+.purple {
   background: linear-gradient(135deg, #a55eea 0%, #26de81 100%);
 }
 
-/* ✅ 진행률 바 개선 */
+/* ✅ 진행률 바 */
 .progress-container {
   background: rgba(255, 255, 255, 0.8);
   padding: 25px;
@@ -324,7 +402,7 @@ section h2::after {
   100% { transform: translateX(100%); }
 }
 
-/* ✅ 신체 정보 스타일 대폭 개선 */
+/* ✅ 신체 정보 스타일 */
 .body-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -388,7 +466,7 @@ section h2::after {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ 입력 폼 스타일 대폭 개선 */
+/* ✅ 입력 폼 스타일 */
 .body-input-section {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
   backdrop-filter: blur(10px);
@@ -490,7 +568,7 @@ section h2::after {
   transform: translateY(-1px);
 }
 
-/* ✅ 테이블 스타일 대폭 개선 */
+/* ✅ 테이블 스타일 */
 .records-section {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
   backdrop-filter: blur(10px);
@@ -568,7 +646,7 @@ tr:last-child td {
   box-shadow: 0 5px 15px rgba(255, 107, 107, 0.5);
 }
 
-/* ✅ 통계 페이지 스타일 대폭 개선 */
+/* ✅ 통계 페이지 스타일 */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -685,7 +763,7 @@ tr:last-child td {
   height: 350px !important;
 }
 
-/* ✅ Toast 알림 개선 */
+/* ✅ Toast 알림 */
 #toastContainer {
   position: fixed;
   top: 120px;
@@ -715,12 +793,17 @@ tr:last-child td {
   transform: translateX(0);
 }
 
-/* ✅ 설정 섹션 개선 */
-#settings {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+/* ✅ 설정 섹션 */
+.settings-form {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-#settings label {
+.settings-form .form-group {
+  margin-bottom: 25px;
+}
+
+.settings-form label {
   display: block;
   font-weight: 600;
   margin-bottom: 8px;
@@ -730,10 +813,8 @@ tr:last-child td {
   font-size: 0.9rem;
 }
 
-#settings input {
+.settings-form input {
   width: 100%;
-  max-width: 300px;
-  margin-bottom: 20px;
   padding: 12px 15px;
   border: 2px solid rgba(102, 126, 234, 0.2);
   border-radius: 10px;
@@ -742,31 +823,13 @@ tr:last-child td {
   background: rgba(255, 255, 255, 0.8);
 }
 
-#settings input:focus {
+.settings-form input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-#settings button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 15px 30px;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  margin: 10px 0;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-#settings button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-}
-
-#settings h3 {
+.settings-form h3 {
   margin-top: 40px;
   margin-bottom: 20px;
   color: #2c3e50;
@@ -776,7 +839,7 @@ tr:last-child td {
   border-bottom: 3px solid #667eea;
 }
 
-/* ✅ 히스토리 스타일 개선 */
+/* ✅ 히스토리 스타일 */
 .history-item {
   padding: 20px;
   margin: 15px 0;
@@ -824,38 +887,240 @@ tr:last-child td {
   border-color: #ef5350;
 }
 
-/* ✅ 반응형 디자인 */
-@media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
+/* ✅ 태블릿 스타일 (768px ~ 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .header-content {
+    padding: 14px 16px;
   }
   
-  header h1 {
-    font-size: 1.5rem;
+  .nav-item {
+    padding: 14px 20px;
+    min-width: 80px;
   }
   
-  nav {
-    margin: 10px;
-    padding: 5px;
-    top: 0;
-    position: relative;
-  }
-  
-  nav button {
-    font-size: 12px;
-    padding: 12px 8px;
+  .nav-text {
+    font-size: 0.85rem;
   }
   
   section {
-    margin: 10px;
-    padding: 20px;
+    margin: 16px;
+    padding: 24px;
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container canvas {
+    height: 300px !important;
+  }
+}
+
+/* ✅ 모바일 스타일 (768px 이하) */
+@media (max-width: 768px) {
+  /* PC 네비게이션 숨기기 */
+  .desktop-nav {
+    display: none;
+  }
+  
+  /* 헤더 모바일 최적화 */
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  .header-content {
+    padding: 12px 16px;
+    min-height: 56px;
+  }
+  
+  .logo-section h1 {
+    font-size: 1.4rem;
+  }
+  
+  .logo-icon {
+    font-size: 1.6rem;
+  }
+  
+  .auth-btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+  
+  /* 모바일 하단 네비게이션 표시 */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    z-index: 999;
+    box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin: 0 2px;
+    min-height: 60px;
+    position: relative;
+  }
+  
+  .mobile-nav-item.active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-radius: 12px;
+  }
+  
+  .mobile-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+  }
+  
+  .mobile-nav-icon {
+    font-size: 1.3rem;
+    filter: grayscale(100%);
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-nav-text {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  
+  .mobile-nav-item.active .mobile-nav-icon {
+    filter: grayscale(0%);
+    transform: scale(1.1);
+  }
+  
+  .mobile-nav-item.active .mobile-nav-text {
+    color: #667eea;
+    font-weight: 700;
+  }
+  
+  /* 콘텐츠 영역 조정 */
+  section {
+    margin-top: 70px; /* 헤더 높이 */
+    margin-bottom: 85px; /* 하단 네비 높이 */
+    margin-left: 12px;
+    margin-right: 12px;
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  
+  /* 터치 친화적 요소들 */
+  .btn-primary {
+    min-height: 48px;
+    padding: 14px 24px;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-height: 48px;
+    font-size: 16px; /* iOS 줌 방지 */
+    padding: 12px 16px;
   }
   
   .form-row {
     grid-template-columns: 1fr;
     gap: 15px;
+  }
+  
+  .body-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .chart-container canvas {
+    height: 280px !important;
+  }
+  
+  .card-container {
+    grid-template-columns: 1fr;
+  }
+  
+  /* 테이블 스크롤 힌트 */
+  .table-container::after {
+    content: '← 좌우로 스와이프 →';
+    display: block;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    padding: 8px;
+    background: rgba(156, 163, 175, 0.1);
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+}
+
+/* ✅ 초소형 모바일 (480px 이하) */
+@media (max-width: 480px) {
+  .header-content {
+    padding: 10px 12px;
+  }
+  
+  .logo-section h1 {
+    font-size: 1.2rem;
+  }
+  
+  .logo-icon {
+    font-size: 1.4rem;
+  }
+  
+  .mobile-nav-text {
+    font-size: 0.65rem;
+  }
+  
+  .mobile-nav-icon {
+    font-size: 1.2rem;
+  }
+  
+  .mobile-nav-item {
+    min-height: 56px;
+    padding: 6px 2px;
+  }
+  
+  section {
+    margin-left: 8px;
+    margin-right: 8px;
+    padding: 16px 12px;
   }
   
   .body-summary {
@@ -865,17 +1130,17 @@ tr:last-child td {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
-  .charts-grid {
-    grid-template-columns: 1fr;
+}
+
+/* ✅ 아이폰 노치 대응 */
+@supports (padding: max(0px)) {
+  .header-content {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
   
-  .chart-container canvas {
-    height: 280px !important;
-  }
-  
-  .card-container {
-    grid-template-columns: 1fr;
+  .mobile-bottom-nav {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
 
