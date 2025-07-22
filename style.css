@@ -5,31 +5,83 @@ body {
   color: #000;
 }
 
-/* ✅ 메뉴와 헤더는 항상 클릭 가능 */
+/* ✅ 헤더 - 로그인 영역 우측 상단 배치 */
 header {
   background: #000;
   color: #fff;
-  text-align: center;
-  padding: 15px;
+  padding: 15px 20px;
   position: sticky;
   top: 0;
   z-index: 9999;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
-header button {
-  margin: 10px;
-  padding: 8px;
+header h1 {
+  margin: 0;
+  flex-grow: 1;
+  text-align: center;
+}
+
+/* ✅ 로그인/로그아웃 영역 - 우측 상단 */
+.auth-section {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  text-align: right;
+}
+
+#loginBtn {
   background: #fff;
-  border: 1px solid #000;
+  color: #000;
+  border: 1px solid #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
   cursor: pointer;
+  font-size: 14px;
 }
 
+#loginBtn:hover {
+  background: #f0f0f0;
+}
+
+#userSection {
+  text-align: right;
+}
+
+#logoutBtn {
+  background: #dc3545;
+  color: #fff;
+  border: 1px solid #dc3545;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-bottom: 5px;
+  display: block;
+  margin-left: auto;
+}
+
+#logoutBtn:hover {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+#userInfo {
+  font-size: 12px;
+  color: #ccc;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ✅ 네비게이션 메뉴 */
 nav {
   display: flex;
   justify-content: center;
   background: #eee;
   position: sticky;
-  top: 60px;
+  top: 80px;
   z-index: 9999;
 }
 
@@ -47,7 +99,15 @@ nav button.active {
   color: #fff;
 }
 
-/* ✅ 섹션 표시/숨김 - !important 제거하고 우선순위 높임 */
+nav button:hover {
+  background: #ddd;
+}
+
+nav button.active:hover {
+  background: #333;
+}
+
+/* ✅ 섹션 표시/숨김 */
 section {
   display: none;
   position: relative;
@@ -126,7 +186,7 @@ th {
 /* Toast 알림 */
 #toastContainer {
   position: fixed;
-  top: 20px;
+  top: 100px;
   right: 20px;
   z-index: 10000;
   pointer-events: none;
@@ -184,4 +244,32 @@ canvas {
   background: #f8f9fa;
   border-radius: 4px;
   border-left: 3px solid #000;
+}
+
+/* ✅ 반응형 - 모바일 */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  
+  .auth-section {
+    position: static;
+    margin-top: 10px;
+  }
+  
+  nav {
+    top: 0;
+    position: relative;
+  }
+  
+  nav button {
+    font-size: 12px;
+    padding: 8px;
+  }
+  
+  .card {
+    flex: 1 1 100%;
+  }
 }
