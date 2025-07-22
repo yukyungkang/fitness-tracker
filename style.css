@@ -240,13 +240,66 @@ canvas {
   margin: 20px 0;
 }
 
-/* 설정 히스토리 */
-#settingsHistoryList div {
-  padding: 8px;
-  margin: 5px 0;
+/* 설정 히스토리 스타일 */
+#settingsHistoryList {
+  margin-top: 15px;
+}
+
+.history-item {
+  padding: 12px;
+  margin: 8px 0;
   background: #f8f9fa;
-  border-radius: 4px;
-  border-left: 3px solid #000;
+  border-radius: 6px;
+  border-left: 4px solid #27ae60;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.history-date {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.history-details {
+  color: #34495e;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.no-history, .no-login, .error {
+  padding: 15px;
+  text-align: center;
+  color: #7f8c8d;
+  font-style: italic;
+  background: #ecf0f1;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.error {
+  background: #fadbd8;
+  color: #c0392b;
+}
+
+/* 설정 섹션 스타일 개선 */
+#settings label {
+  display: inline-block;
+  width: 150px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+#settings input {
+  margin-bottom: 15px;
+}
+
+#settings h3 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 5px;
 }
 
 /* ✅ 반응형 - 모바일 */
