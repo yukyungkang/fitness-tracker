@@ -59,11 +59,21 @@ canvas {
   max-height: 300px;
   margin-top: 20px;
 }
-.list { margin-top: 10px; }
-.list-item {
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
 }
+.card {
+  flex: 1 1 calc(50% - 10px);
+  padding: 15px;
+  border-radius: 8px;
+  color: #fff;
+}
+.red { background: #e74c3c; }
+.green { background: #27ae60; }
+.yellow { background: #f1c40f; color: #000; }
+.purple { background: #8e44ad; }
 @media(max-width:768px) {
   nav button { font-size: 14px; }
   table, thead, tbody, th, td, tr {
