@@ -26,7 +26,7 @@
 <nav>
   <button class="tab-btn active" data-tab="guide">가이드</button>
   <button class="tab-btn" data-tab="plan">플랜</button>
-  <button class="tab-btn" data-tab="weight">체중 기록</button>
+  <button class="tab-btn" data-tab="body">신체 정보</button>
   <button class="tab-btn" data-tab="stats">통계</button>
   <button class="tab-btn" data-tab="settings">설정</button>
 </nav>
@@ -60,27 +60,184 @@
   </table>
 </section>
 
-<!-- 체중 기록 -->
-<section id="weight">
-  <h2>체중 기록</h2>
-  <div class="goal-info">
-    목표: <span id="goalWeightDisplay">-</span>kg / 현재: <span id="currentWeightDisplay">-</span>kg / 남은: <span id="remainingWeightDisplay">-</span>kg
+<!-- 신체 정보 기록 -->
+<section id="body">
+  <h2>📊 신체 정보 기록</h2>
+  
+  <!-- 현재 상태 요약 -->
+  <div class="body-summary">
+    <div class="summary-card">
+      <div class="summary-icon">⚖️</div>
+      <div class="summary-content">
+        <span class="summary-label">현재 체중</span>
+        <span class="summary-value" id="currentWeightDisplay">-kg</span>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon">📉</div>
+      <div class="summary-content">
+        <span class="summary-label">체지방률</span>
+        <span class="summary-value" id="currentBodyFatDisplay">-%</span>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon">💪</div>
+      <div class="summary-content">
+        <span class="summary-label">근육량</span>
+        <span class="summary-value" id="currentMuscleDisplay">-kg</span>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon">🎯</div>
+      <div class="summary-content">
+        <span class="summary-label">목표까지</span>
+        <span class="summary-value" id="remainingWeightDisplay">-kg</span>
+      </div>
+    </div>
   </div>
-  <input type="date" id="dateInput">
-  <input type="number" id="weightInput" placeholder="체중 (kg)">
-  <button id="addWeightBtn">추가</button>
-  <table>
-    <thead><tr><th>날짜</th><th>체중</th></tr></thead>
-    <tbody id="weightTable"></tbody>
-  </table>
+  
+  <!-- 입력 폼 -->
+  <div class="body-input-section">
+    <h3>📝 오늘의 신체 정보 입력</h3>
+    <div class="input-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="measureDate">측정 날짜</label>
+          <input type="date" id="measureDate">
+        </div>
+        <div class="form-group">
+          <label for="measureTime">측정 시간</label>
+          <select id="measureTime">
+            <option value="morning">아침 (기상 후)</option>
+            <option value="evening">저녁 (운동 후)</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="weightInput">체중 (kg)</label>
+          <input type="number" id="weightInput" placeholder="예: 65.5" step="0.1">
+        </div>
+        <div class="form-group">
+          <label for="bodyFatInput">체지방률 (%)</label>
+          <input type="number" id="bodyFatInput" placeholder="예: 18.5" step="0.1">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="muscleMassInput">근육량 (kg)</label>
+          <input type="number" id="muscleMassInput" placeholder="예: 45.2" step="0.1">
+        </div>
+        <div class="form-group">
+          <label for="visceralFatInput">내장지방 레벨</label>
+          <input type="number" id="visceralFatInput" placeholder="예: 5" step="1">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="waterPercentInput">수분률 (%)</label>
+          <input type="number" id="waterPercentInput" placeholder="예: 55.5" step="0.1">
+        </div>
+        <div class="form-group">
+          <label for="bmrInput">기초대사율 (kcal)</label>
+          <input type="number" id="bmrInput" placeholder="예: 1450" step="1">
+        </div>
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="bodyMemo">메모</label>
+        <textarea id="bodyMemo" placeholder="컨디션, 측정 조건 등을 기록해보세요"></textarea>
+      </div>
+      
+      <button id="addBodyDataBtn" class="btn-primary">📊 신체 정보 저장</button>
+    </div>
+  </div>
+  
+  <!-- 기록 테이블 -->
+  <div class="records-section">
+    <h3>📋 최근 기록 (최근 10개)</h3>
+    <div class="table-container">
+      <table class="body-records-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>시간</th>
+            <th>체중</th>
+            <th>체지방률</th>
+            <th>근육량</th>
+            <th>BMI</th>
+            <th>메모</th>
+            <th>삭제</th>
+          </tr>
+        </thead>
+        <tbody id="bodyRecordsTable"></tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
 <!-- 통계 -->
 <section id="stats">
-  <h2>체중 & 운동 통계</h2>
-  <canvas id="weightChart"></canvas>
-  <h3>운동 완료율</h3>
-  <canvas id="workoutChart"></canvas>
+  <h2>📊 신체 분석 & 운동 통계</h2>
+  
+  <!-- 주요 지표 카드 -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <h3>체중 변화</h3>
+        <div class="stat-value" id="weightChangeDisplay">0kg</div>
+        <div class="stat-period">지난 30일</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📉</div>
+      <div class="stat-content">
+        <h3>체지방 감소</h3>
+        <div class="stat-value" id="bodyFatChangeDisplay">0%</div>
+        <div class="stat-period">지난 30일</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💪</div>
+      <div class="stat-content">
+        <h3>근육량 증가</h3>
+        <div class="stat-value" id="muscleGainDisplay">0kg</div>
+        <div class="stat-period">지난 30일</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-content">
+        <h3>현재 BMI</h3>
+        <div class="stat-value" id="currentBMIDisplay">0</div>
+        <div class="stat-period">최근 측정</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 차트 그리드 -->
+  <div class="charts-grid">
+    <div class="chart-container">
+      <h3>📊 체중 변화 추이</h3>
+      <canvas id="weightChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>📉 체지방률 변화</h3>
+      <canvas id="bodyFatChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>💪 근육량 변화</h3>
+      <canvas id="muscleChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>🏃‍♀️ 운동 완료율</h3>
+      <canvas id="workoutChart"></canvas>
+    </div>
+  </div>
 </section>
 
 <!-- 설정 -->
@@ -97,6 +254,8 @@
   <input type="number" id="menstrualLength" value="5"><br><br>
   <label>목표 체중 (kg):</label>
   <input type="number" id="goalWeight" value="60"><br><br>
+  <label>키 (cm):</label>
+  <input type="number" id="userHeight" placeholder="예: 165"><br><br>
   <button id="saveSettingsBtn">저장</button>
   <h3>이전 설정 기록</h3>
   <div id="settingsHistoryList"></div>
