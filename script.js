@@ -294,73 +294,127 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ✅ 신체 정보 기록 추가
   if (addBodyDataBtn) {
-    addBodyDataBtn.addEventListener('click', async () => {
-      console.log('📊 신체 정보 저장 버튼 클릭됨');
-      
-      if (!currentUser) {
-        return showToast("로그인이 필요합니다.");
-      }
-      
-      const date = measureDate?.value;
-      const time = measureTime?.value;
-      const weight = parseFloat(weightInput?.value);
-      const bodyFat = parseFloat(bodyFatInput?.value);
-      const muscleMass = parseFloat(muscleMassInput?.value);
-      const visceralFat = parseFloat(visceralFatInput?.value);
-      const waterPercent = parseFloat(waterPercentInput?.value);
-      const bmr = parseFloat(bmrInput?.value);
-      const memo = bodyMemo?.value;
-      
-      if (!date || !weight) {
-        return showToast("날짜와 체중은 필수 입력 항목입니다.");
-      }
-      
-      try {
-        showToast("📊 신체 정보 저장 중...");
-        
-        const bodyData = {
-          uid: currentUser.uid,
-          date,
-          time,
-          weight,
-          bodyFat: bodyFat || null,
-          muscleMass: muscleMass || null,
-          visceralFat: visceralFat || null,
-          waterPercent: waterPercent || null,
-          bmr: bmr || null,
-          bmi: calculateBMI(userHeight, weight),
-          memo: memo || '',
-          createdAt: new Date().toISOString()
-        };
-        
-        console.log('📝 신체 정보 데이터:', bodyData);
-        
-        const bodyRef = collection(db, "bodyRecords");
-        await addDoc(bodyRef, bodyData);
-        
-        console.log('✅ 신체 정보 저장 완료');
-        showToast("✅ 신체 정보 저장 완료!");
-        
-        // 입력 폼 초기화
-        if (weightInput) weightInput.value = '';
-        if (bodyFatInput) bodyFatInput.value = '';
-        if (muscleMassInput) muscleMassInput.value = '';
-        if (visceralFatInput) visceralFatInput.value = '';
-        if (waterPercentInput) waterPercentInput.value = '';
-        if (bmrInput) bmrInput.value = '';
-        if (bodyMemo) bodyMemo.value = '';
-        
-        // 데이터 다시 로드
-        await loadBodyRecords();
-        updateBodySummary();
-        updateStatsCards();
-        
-      } catch (error) {
-        console.error("❌ 신체 정보 저장 오류:", error);
-        showToast("❌ 신체 정보 저장 실패: " + error.message);
-      }
+  addBodyDataBtn.addEventListener('click', async (e) => {
+    e.preventDefault(); // 폼 제출 방지
+    console.log('📊 신체 정보 저장 버튼 클릭됨');
+    
+    if (!currentUser) {
+      console.log('❌ 로그인되지 않음');
+      return showToast("로그인이 필요합니다.");
+    }
+    
+    console.log('👤 현재 사용자:', currentUser.displayName);
+    
+    // DOM 요소들 다시 참조 (확실하게)
+    const measureDateInput = document.getElementById('measureDate');
+    const measureTimeSelect = document.getElementById('measureTime');
+    const weightInputField = document.getElementById('weightInput');
+    const bodyFatInputField = document.getElementById('bodyFatInput');
+    const muscleMassInputField = document.getElementById('muscleMassInput');
+    const visceralFatInputField = document.getElementById('visceralFatInput');
+    const waterPercentInputField = document.getElementById('waterPercentInput');
+    const bmrInputField = document.getElementById('bmrInput');
+    const bodyMemoField = document.getElementById('bodyMemo');
+    
+    console.log('📝 DOM 요소 확인:', {
+      measureDate: measureDateInput?.value,
+      measureTime: measureTimeSelect?.value,
+      weight: weightInputField?.value,
+      bodyFat: bodyFatInputField?.value,
+      muscle: muscleMassInputField?.value
     });
-  }
+    
+    const date = measureDateInput?.value;
+    const time = measureTimeSelect?.value || 'morning';
+    const weight = parseFloat(weightInputField?.value);
+    const bodyFat = parseFloat(bodyFatInputField?.value);
+    const muscleMass = parseFloat(muscleMassInputField?.value);
+    const visceralFat = parseFloat(visceralFatInputField?.value);
+    const waterPercent = parseFloat(waterPercentInputField?.value);
+    const bmr = parseFloat(bmrInputField?.value);
+    const memo = bodyMemoField?.value || '';
+    
+    console.log('📝 입력된 데이터:', {
+      date,
+      time,
+      weight,
+      bodyFat,
+      muscleMass,
+      visceralFat,
+      waterPercent,
+      bmr,
+      memo,
+      userHeight
+    });
+    
+    if (!date) {
+      console.log('❌ 날짜 없음');
+      return showToast("측정 날짜를 선택해주세요.");
+    }
+    
+    if (!weight || isNaN(weight)) {
+      console.log('❌ 체중 값 없음 또는 잘못됨');
+      return showToast("체중을 올바르게 입력해주세요.");
+    }
+    
+    try {
+      showToast("📊 신체 정보 저장 중...");
+      console.log('💾 저장 시작...');
+      
+      const bodyData = {
+        uid: currentUser.uid,
+        userName: currentUser.displayName,
+        date: date,
+        time: time,
+        weight: weight,
+        bodyFat: isNaN(bodyFat) ? null : bodyFat,
+        muscleMass: isNaN(muscleMass) ? null : muscleMass,
+        visceralFat: isNaN(visceralFat) ? null : visceralFat,
+        waterPercent: isNaN(waterPercent) ? null : waterPercent,
+        bmr: isNaN(bmr) ? null : bmr,
+        bmi: parseFloat(calculateBMI(userHeight, weight)),
+        memo: memo,
+        createdAt: new Date().toISOString(),
+        timestamp: new Date().getTime()
+      };
+      
+      console.log('📄 저장할 데이터:', bodyData);
+      
+      const bodyRef = collection(db, "bodyRecords");
+      console.log('📁 컬렉션 참조:', bodyRef);
+      
+      const docRef = await addDoc(bodyRef, bodyData);
+      console.log('✅ 문서 저장 완료, ID:', docRef.id);
+      
+      showToast("✅ 신체 정보 저장 완료!");
+      
+      // 입력 폼 초기화
+      if (weightInputField) weightInputField.value = '';
+      if (bodyFatInputField) bodyFatInputField.value = '';
+      if (muscleMassInputField) muscleMassInputField.value = '';
+      if (visceralFatInputField) visceralFatInputField.value = '';
+      if (waterPercentInputField) waterPercentInputField.value = '';
+      if (bmrInputField) bmrInputField.value = '';
+      if (bodyMemoField) bodyMemoField.value = '';
+      
+      console.log('🔄 데이터 다시 로드 시작...');
+      
+      // 데이터 다시 로드
+      await loadBodyRecords();
+      
+      console.log('🎉 저장 완료!');
+      
+    } catch (error) {
+      console.error("❌ 신체 정보 저장 오류:", error);
+      console.error("오류 상세:", error.code, error.message);
+      showToast("❌ 신체 정보 저장 실패: " + error.message);
+    }
+  });
+  
+  console.log('✅ 신체 정보 저장 버튼 이벤트 리스너 등록 완료');
+} else {
+  console.error('❌ addBodyDataBtn을 찾을 수 없습니다');
+}
 
   // ✅ 설정 불러오기
   async function loadSettings() {
