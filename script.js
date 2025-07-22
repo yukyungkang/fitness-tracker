@@ -1,9 +1,8 @@
-// ✅ Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ✅ Firebase 설정
+// Firebase 설정
 const firebaseConfig = {
   apiKey: "AIzaSyBasJig37TExc76J3mlcJ9p5uZLXFrY5CQ",
   authDomain: "dietpage-5f49a.firebaseapp.com",
@@ -18,7 +17,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ DOM
+// DOM
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const userInfo = document.getElementById('userInfo');
@@ -27,7 +26,7 @@ const weightList = document.getElementById('weightList');
 const weightTable = document.getElementById('weightTable');
 let currentUser = null;
 
-// ✅ Tabs
+// Tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -37,7 +36,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ✅ Google 로그인
+// 로그인
 loginBtn.onclick = async () => {
   try {
     const res = await signInWithPopup(auth, provider);
@@ -65,20 +64,36 @@ logoutBtn.onclick = async () => {
   workoutChart.update();
 };
 
+// ✅ 주기 패턴
+const cyclePattern = [
+  { phase: "월경기", days: 5, morning: "경사3%, 속도4, 20분", evening: "스트레칭 / 요가" },
+  { phase: "여포기", days: 8, morning: "경사6%, 속도4.5, 30분", evening: "IMPT 루틴" },
+  { phase: "배란기", days: 2, morning: "경사8%, 속도5, 30분", evening: "IMPT + 코어 루틴" },
+  { phase: "황체기", days: 13, morning: "경사5%, 속도4.5, 30분", evening: "IMPT 루틴" }
+];
+
 // ✅ 90일 플랜 생성
 const planData = [];
-const startDate = new Date(); // ✅ 오늘 날짜 기준
+const startDate = new Date();
+let cycleIndex = 0, dayCount = 0;
 for (let i = 0; i < 90; i++) {
   const d = new Date(startDate);
   d.setDate(d.getDate() + i);
-  const dateStr = `${d.getMonth() + 1}/${d.getDate()} (${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]})`;
+  const dateStr = `${d.getMonth() + 1}/${d.getDate()} (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+  if (dayCount >= cyclePattern[cycleIndex].days) {
+    cycleIndex = (cycleIndex + 1) % cyclePattern.length;
+    dayCount = 0;
+  }
+  const phase = cyclePattern[cycleIndex];
   planData.push({
     day: i + 1,
     date: dateStr,
-    morning: "경사6%, 속도4.5, 30분",
-    evening: "IMPT 루틴",
+    phase: phase.phase,
+    morning: phase.morning,
+    evening: phase.evening,
     link: "https://www.youtube.com/watch?v=wmSz8C44ldo"
   });
+  dayCount++;
 }
 
 // ✅ 플랜 로드
@@ -95,6 +110,7 @@ async function loadPlan() {
     tr.innerHTML = `
       <td>${item.day}</td>
       <td>${item.date}</td>
+      <td>${item.phase}</td>
       <td>${item.morning}</td>
       <td><a href="${item.link}" target="_blank">${item.evening}</a></td>
       <td><input type="checkbox" class="morning" data-day="${item.day}" ${morningChecked}></td>
