@@ -1,116 +1,107 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>90일 다이어트 플랜</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="module" src="script.js" defer></script>
-</head>
-<body>
-
-<header>
-  <h1>90일 다이어트 관리</h1>
-  <div>
-    <button id="loginBtn">Google 로그인</button>
-    <button id="logoutBtn" style="display:none;">로그아웃</button>
-  </div>
-  <p id="userInfo"></p>
-</header>
-
-<nav>
-  <button class="tab-btn active" data-tab="guide">가이드</button>
-  <button class="tab-btn" data-tab="plan">플랜</button>
-  <button class="tab-btn" data-tab="weight">체중 기록</button>
-  <button class="tab-btn" data-tab="stats">통계</button>
-  <button class="tab-btn" data-tab="settings">설정</button>
-</nav>
-
-<!-- 가이드 -->
-<section id="guide" class="active">
-  <h2>주기 기반 다이어트 가이드</h2>
-  <div class="card-container">
-    <div class="card red">
-      <h3>월경기 (1~5일)</h3>
-      <p>저강도</p>
-      <ul><li>가벼운 걷기</li><li>스트레칭</li><li>요가</li></ul>
-    </div>
-    <div class="card green">
-      <h3>여포기 (6~13일)</h3>
-      <p>중강도</p>
-      <ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
-    </div>
-    <div class="card yellow">
-      <h3>배란기 (14~15일)</h3>
-      <p>고강도</p>
-      <ul><li>빠른 속도 걷기</li><li>IMPT + 코어 루틴</li></ul>
-    </div>
-    <div class="card purple">
-      <h3>황체기 (16~28일)</h3>
-      <p>중강도 유지</p>
-      <ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
-    </div>
-  </div>
-</section>
-
-<!-- 플랜 -->
-<section id="plan">
-  <h2>90일 다이어트 플랜</h2>
-  <div class="progress-container">
-    <p>전체 진행률: <span id="progressText">0%</span></p>
-    <div class="progress-bar"><div id="progressFill"></div></div>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Day</th><th>날짜</th><th>주기</th><th>아침 유산소</th><th>저녁 홈트</th><th>아침 완료</th><th>저녁 완료</th>
-      </tr>
-    </thead>
-    <tbody id="planTable"></tbody>
-  </table>
-</section>
-
-<!-- 체중 기록 -->
-<section id="weight">
-  <h2>체중 기록</h2>
-  <div class="goal-info">
-    목표 체중: <span id="goalWeightDisplay">-</span>kg / 현재: <span id="currentWeightDisplay">-</span>kg / 남은: <span id="remainingWeightDisplay">-</span>kg
-  </div>
-  <input type="date" id="dateInput">
-  <input type="number" id="weightInput" placeholder="체중 (kg)">
-  <button id="addWeightBtn">추가</button>
-  <div class="list" id="weightList"></div>
-  <table>
-    <thead><tr><th>날짜</th><th>체중</th></tr></thead>
-    <tbody id="weightTable"></tbody>
-  </table>
-</section>
-
-<!-- 통계 -->
-<section id="stats">
-  <h2>체중 & 운동 통계</h2>
-  <canvas id="weightChart"></canvas>
-  <h3>운동 완료율</h3>
-  <canvas id="workoutChart"></canvas>
-</section>
-
-<!-- 설정 -->
-<section id="settings">
-  <h2>설정</h2>
-  <label>이전 생리 시작일:</label>
-  <input type="date" id="prevPeriodStart"><br><br>
-  <label>마지막 생리 시작일:</label>
-  <input type="date" id="periodStart"><br><br>
-  <p>평균 주기: <span id="avgCycleDisplay">28</span>일</p><br>
-  <label>평균 주기 (일):</label>
-  <input type="number" id="cycleLength" value="28"><br><br>
-  <label>월경기 길이 (일):</label>
-  <input type="number" id="menstrualLength" value="5"><br><br>
-  <label>목표 체중 (kg):</label>
-  <input type="number" id="goalWeight" value="60"><br><br>
-  <button id="saveSettingsBtn">저장</button>
-</section>
-
-</body>
-</html>
+body {
+  font-family: 'Helvetica', sans-serif;
+  margin: 0;
+  background: #fff;
+  color: #000;
+}
+header {
+  background: #000;
+  color: #fff;
+  text-align: center;
+  padding: 15px;
+}
+header button {
+  margin: 10px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+nav {
+  display: flex;
+  justify-content: center;
+  background: #eee;
+}
+nav button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+}
+nav button.active {
+  background: #000;
+  color: #fff;
+}
+section {
+  display: none;
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+section.active { display: block; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+th {
+  background: #000;
+  color: #fff;
+}
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+.card {
+  flex: 1 1 calc(50% - 10px);
+  padding: 15px;
+  border-radius: 8px;
+  color: #fff;
+}
+.red { background: #e74c3c; }
+.green { background: #27ae60; }
+.yellow { background: #f1c40f; color: #000; }
+.purple { background: #8e44ad; }
+.progress-container {
+  margin: 15px 0;
+}
+.progress-bar {
+  width: 100%;
+  height: 15px;
+  background: #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+#progressFill {
+  height: 100%;
+  width: 0%;
+  background: #27ae60;
+}
+.goal-info {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+@media(max-width:768px) {
+  nav button { font-size: 14px; }
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+  }
+  th { display: none; }
+  td {
+    padding: 10px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+  }
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+  }
+}
