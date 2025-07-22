@@ -5,18 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>90일 다이어트 플랜</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💪</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="script.js" defer></script>
 </head>
 <body>
-
 <header>
   <h1>90일 다이어트 플랜</h1>
-  <div>
+  
+  <!-- ✅ 우측 상단 로그인/로그아웃 영역 -->
+  <div class="auth-section">
     <button id="loginBtn">Google 로그인</button>
-    <button id="logoutBtn" style="display:none;">로그아웃</button>
+    <div id="userSection" style="display:none;">
+      <button id="logoutBtn">로그아웃</button>
+      <p id="userInfo"></p>
+    </div>
   </div>
-  <p id="userInfo"></p>
 </header>
 
 <nav>
@@ -97,6 +101,5 @@
   <h3>이전 설정 기록</h3>
   <div id="settingsHistoryList"></div>
 </section>
-
 </body>
 </html>
