@@ -27,25 +27,17 @@
   <button class="tab-btn" data-tab="settings">설정</button>
 </nav>
 
-<!-- Toast -->
+<!-- Toast 알림 -->
 <div id="toastContainer"></div>
 
 <!-- 가이드 -->
 <section id="guide" class="active">
   <h2>주기 기반 다이어트 가이드</h2>
   <div class="card-container">
-    <div class="card red">
-      <h3>월경기</h3><p>저강도</p><ul><li>스트레칭</li><li>가벼운 걷기</li></ul>
-    </div>
-    <div class="card green">
-      <h3>여포기</h3><p>중강도</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
-    </div>
-    <div class="card yellow">
-      <h3>배란기</h3><p>고강도</p><ul><li>빠른 걷기</li><li>IMPT + 코어</li></ul>
-    </div>
-    <div class="card purple">
-      <h3>황체기</h3><p>중강도 유지</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
-    </div>
+    <div class="card red"><h3>월경기</h3><p>저강도</p><ul><li>스트레칭</li><li>걷기</li></ul></div>
+    <div class="card green"><h3>여포기</h3><p>중강도</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul></div>
+    <div class="card yellow"><h3>배란기</h3><p>고강도</p><ul><li>빠른 걷기</li><li>IMPT + 코어</li></ul></div>
+    <div class="card purple"><h3>황체기</h3><p>중강도 유지</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul></div>
   </div>
 </section>
 
@@ -68,7 +60,7 @@
 <section id="weight">
   <h2>체중 기록</h2>
   <div class="goal-info">
-    목표 체중: <span id="goalWeightDisplay">-</span>kg / 현재: <span id="currentWeightDisplay">-</span>kg / 남은: <span id="remainingWeightDisplay">-</span>kg
+    목표: <span id="goalWeightDisplay">-</span>kg / 현재: <span id="currentWeightDisplay">-</span>kg / 남은: <span id="remainingWeightDisplay">-</span>kg
   </div>
   <input type="date" id="dateInput">
   <input type="number" id="weightInput" placeholder="체중 (kg)">
