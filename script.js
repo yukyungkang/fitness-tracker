@@ -18,11 +18,18 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+// ✅ 전역 변수들을 window 객체에 추가하여 콘솔에서도 접근 가능하게
+window.currentUser = null;
+window.planData = [];
+window.goalWeight = 60;
+window.bodyRecords = [];
+window.userHeight = 165;
+
 let currentUser = null;
 let planData = [];
 let goalWeight = 60;
 let bodyRecords = [];
-let userHeight = 165; // 기본값
+let userHeight = 165;
 
 // ✅ Toast 함수
 function showToast(msg) {
@@ -75,7 +82,6 @@ function switchTab(tabName) {
     selectedSection.classList.add('active');
     console.log('✅ 섹션 활성화:', selectedSection);
     
-    // 통계 탭일 때 차트 그리기
     if (tabName === 'stats') {
       console.log('📊 통계 탭 감지됨! 차트 그리기 시작');
       setTimeout(() => {
@@ -85,6 +91,115 @@ function switchTab(tabName) {
     }
   }
 }
+
+// ✅ 신체 정보 저장 함수 (전역 함수로 분리)
+window.saveBodyData = async function() {
+  console.log('📊 신체 정보 저장 함수 호출됨');
+  console.log('👤 현재 사용자 상태:', currentUser);
+  
+  if (!currentUser) {
+    console.log('❌ 로그인되지 않음');
+    return showToast("로그인이 필요합니다.");
+  }
+  
+  console.log('👤 현재 사용자:', currentUser.displayName);
+  
+  // DOM 요소들 직접 참조
+  const measureDateInput = document.getElementById('measureDate');
+  const measureTimeSelect = document.getElementById('measureTime');
+  const weightInputField = document.getElementById('weightInput');
+  const bodyFatInputField = document.getElementById('bodyFatInput');
+  const muscleMassInputField = document.getElementById('muscleMassInput');
+  const visceralFatInputField = document.getElementById('visceralFatInput');
+  const waterPercentInputField = document.getElementById('waterPercentInput');
+  const bmrInputField = document.getElementById('bmrInput');
+  const bodyMemoField = document.getElementById('bodyMemo');
+  
+  console.log('📝 DOM 요소 확인:', {
+    measureDate: measureDateInput?.value,
+    measureTime: measureTimeSelect?.value,
+    weight: weightInputField?.value,
+    bodyFat: bodyFatInputField?.value,
+    muscle: muscleMassInputField?.value
+  });
+  
+  const date = measureDateInput?.value;
+  const time = measureTimeSelect?.value || 'morning';
+  const weight = parseFloat(weightInputField?.value);
+  const bodyFat = parseFloat(bodyFatInputField?.value);
+  const muscleMass = parseFloat(muscleMassInputField?.value);
+  const visceralFat = parseFloat(visceralFatInputField?.value);
+  const waterPercent = parseFloat(waterPercentInputField?.value);
+  const bmr = parseFloat(bmrInputField?.value);
+  const memo = bodyMemoField?.value || '';
+  
+  console.log('📝 입력된 데이터:', {
+    date, time, weight, bodyFat, muscleMass, visceralFat, waterPercent, bmr, memo, userHeight
+  });
+  
+  if (!date) {
+    console.log('❌ 날짜 없음');
+    return showToast("측정 날짜를 선택해주세요.");
+  }
+  
+  if (!weight || isNaN(weight)) {
+    console.log('❌ 체중 값 없음 또는 잘못됨');
+    return showToast("체중을 올바르게 입력해주세요.");
+  }
+  
+  try {
+    showToast("📊 신체 정보 저장 중...");
+    console.log('💾 저장 시작...');
+    
+    const bodyData = {
+      uid: currentUser.uid,
+      userName: currentUser.displayName,
+      date: date,
+      time: time,
+      weight: weight,
+      bodyFat: isNaN(bodyFat) ? null : bodyFat,
+      muscleMass: isNaN(muscleMass) ? null : muscleMass,
+      visceralFat: isNaN(visceralFat) ? null : visceralFat,
+      waterPercent: isNaN(waterPercent) ? null : waterPercent,
+      bmr: isNaN(bmr) ? null : bmr,
+      bmi: parseFloat(calculateBMI(userHeight, weight)),
+      memo: memo,
+      createdAt: new Date().toISOString(),
+      timestamp: new Date().getTime()
+    };
+    
+    console.log('📄 저장할 데이터:', bodyData);
+    
+    const bodyRef = collection(db, "bodyRecords");
+    console.log('📁 컬렉션 참조:', bodyRef);
+    
+    const docRef = await addDoc(bodyRef, bodyData);
+    console.log('✅ 문서 저장 완료, ID:', docRef.id);
+    
+    showToast("✅ 신체 정보 저장 완료!");
+    
+    // 입력 폼 초기화
+    if (weightInputField) weightInputField.value = '';
+    if (bodyFatInputField) bodyFatInputField.value = '';
+    if (muscleMassInputField) muscleMassInputField.value = '';
+    if (visceralFatInputField) visceralFatInputField.value = '';
+    if (waterPercentInputField) waterPercentInputField.value = '';
+    if (bmrInputField) bmrInputField.value = '';
+    if (bodyMemoField) bodyMemoField.value = '';
+    
+    console.log('🔄 데이터 다시 로드 시작...');
+    
+    // 데이터 다시 로드
+    await loadBodyRecords();
+    
+    console.log('🎉 저장 완료!');
+    
+  } catch (error) {
+    console.error("❌ 신체 정보 저장 오류:", error);
+    console.error("오류 상세:", error.code, error.message);
+    showToast("❌ 신체 정보 저장 실패: " + error.message);
+  }
+};
 
 // ✅ DOM 로드 완료 후 실행
 document.addEventListener('DOMContentLoaded', function() {
@@ -129,14 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
   const addBodyDataBtn = document.getElementById('addBodyDataBtn');
   const measureDate = document.getElementById('measureDate');
-  const measureTime = document.getElementById('measureTime');
-  const weightInput = document.getElementById('weightInput');
-  const bodyFatInput = document.getElementById('bodyFatInput');
-  const muscleMassInput = document.getElementById('muscleMassInput');
-  const visceralFatInput = document.getElementById('visceralFatInput');
-  const waterPercentInput = document.getElementById('waterPercentInput');
-  const bmrInput = document.getElementById('bmrInput');
-  const bodyMemo = document.getElementById('bodyMemo');
   const prevPeriodStartInput = document.getElementById('prevPeriodStart');
   const periodStartInput = document.getElementById('periodStart');
   const cycleLengthInput = document.getElementById('cycleLength');
@@ -161,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
         await setPersistence(auth, browserLocalPersistence);
         const res = await signInWithPopup(auth, provider);
         currentUser = res.user;
+        window.currentUser = res.user; // 전역 변수에도 할당
         console.log('✅ 로그인 성공:', currentUser.displayName);
         showToast("✅ 로그인 성공!");
       } catch (error) {
@@ -181,6 +289,19 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('❌ 로그아웃 오류:', error);
       }
     });
+  }
+
+  // ✅ 신체 정보 저장 버튼 이벤트 (수정된 방식)
+  if (addBodyDataBtn) {
+    console.log('✅ 신체 정보 저장 버튼 찾음');
+    addBodyDataBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      console.log('📊 신체 정보 저장 버튼 클릭 이벤트 발생');
+      await window.saveBodyData();
+    });
+    console.log('✅ 신체 정보 저장 버튼 이벤트 리스너 등록 완료');
+  } else {
+    console.error('❌ addBodyDataBtn을 찾을 수 없습니다');
   }
 
   // ✅ 평균 주기 자동 계산
@@ -220,13 +341,12 @@ document.addEventListener('DOMContentLoaded', function() {
       goalWeight = parseFloat(goalWeightInput?.value || 60);
       userHeight = parseFloat(userHeightInput?.value || 165);
       
+      // 전역 변수에도 업데이트
+      window.goalWeight = goalWeight;
+      window.userHeight = userHeight;
+      
       console.log('📝 입력 데이터:', {
-        start,
-        prevStart,
-        cycleLength,
-        menstrualLength,
-        goalWeight,
-        userHeight
+        start, prevStart, cycleLength, menstrualLength, goalWeight, userHeight
       });
       
       if (!start || !cycleLength || !menstrualLength) {
@@ -237,8 +357,6 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         showToast("💾 설정 저장 중...");
         
-        // 1. 사용자 설정 저장
-        console.log('📤 사용자 설정 저장 시작...');
         const ref = doc(db, "userData", currentUser.uid);
         await setDoc(ref, {
           periodStart: start,
@@ -251,8 +369,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         console.log('✅ 사용자 설정 저장 완료');
         
-        // 2. 설정 히스토리 저장
-        console.log('📤 히스토리 저장 시작...');
         const now = new Date();
         const historyData = {
           uid: currentUser.uid,
@@ -266,22 +382,17 @@ document.addEventListener('DOMContentLoaded', function() {
           timestamp: now.getTime()
         };
         
-        console.log('📝 히스토리 데이터:', historyData);
-        
         const historyRef = collection(db, "settingsHistory");
         await addDoc(historyRef, historyData);
         console.log('✅ 히스토리 저장 완료');
         
         showToast("✅ 설정 저장 완료!");
         
-        // 3. 플랜 재생성
         generatePlan(start, cycleLength, menstrualLength);
         renderPlanTable();
         updateBodySummary();
         
-        // 4. 히스토리 다시 로드
         setTimeout(async () => {
-          console.log('🔄 히스토리 다시 로드...');
           await loadSettingsHistory();
         }, 1000);
         
@@ -292,129 +403,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ✅ 신체 정보 기록 추가
-  if (addBodyDataBtn) {
-  addBodyDataBtn.addEventListener('click', async (e) => {
-    e.preventDefault(); // 폼 제출 방지
-    console.log('📊 신체 정보 저장 버튼 클릭됨');
-    
-    if (!currentUser) {
-      console.log('❌ 로그인되지 않음');
-      return showToast("로그인이 필요합니다.");
-    }
-    
-    console.log('👤 현재 사용자:', currentUser.displayName);
-    
-    // DOM 요소들 다시 참조 (확실하게)
-    const measureDateInput = document.getElementById('measureDate');
-    const measureTimeSelect = document.getElementById('measureTime');
-    const weightInputField = document.getElementById('weightInput');
-    const bodyFatInputField = document.getElementById('bodyFatInput');
-    const muscleMassInputField = document.getElementById('muscleMassInput');
-    const visceralFatInputField = document.getElementById('visceralFatInput');
-    const waterPercentInputField = document.getElementById('waterPercentInput');
-    const bmrInputField = document.getElementById('bmrInput');
-    const bodyMemoField = document.getElementById('bodyMemo');
-    
-    console.log('📝 DOM 요소 확인:', {
-      measureDate: measureDateInput?.value,
-      measureTime: measureTimeSelect?.value,
-      weight: weightInputField?.value,
-      bodyFat: bodyFatInputField?.value,
-      muscle: muscleMassInputField?.value
-    });
-    
-    const date = measureDateInput?.value;
-    const time = measureTimeSelect?.value || 'morning';
-    const weight = parseFloat(weightInputField?.value);
-    const bodyFat = parseFloat(bodyFatInputField?.value);
-    const muscleMass = parseFloat(muscleMassInputField?.value);
-    const visceralFat = parseFloat(visceralFatInputField?.value);
-    const waterPercent = parseFloat(waterPercentInputField?.value);
-    const bmr = parseFloat(bmrInputField?.value);
-    const memo = bodyMemoField?.value || '';
-    
-    console.log('📝 입력된 데이터:', {
-      date,
-      time,
-      weight,
-      bodyFat,
-      muscleMass,
-      visceralFat,
-      waterPercent,
-      bmr,
-      memo,
-      userHeight
-    });
-    
-    if (!date) {
-      console.log('❌ 날짜 없음');
-      return showToast("측정 날짜를 선택해주세요.");
-    }
-    
-    if (!weight || isNaN(weight)) {
-      console.log('❌ 체중 값 없음 또는 잘못됨');
-      return showToast("체중을 올바르게 입력해주세요.");
-    }
+  // ✅ 신체 기록 불러오기
+  window.loadBodyRecords = async function() {
+    if (!currentUser) return;
     
     try {
-      showToast("📊 신체 정보 저장 중...");
-      console.log('💾 저장 시작...');
+      console.log('📥 신체 기록 불러오기 시작...');
       
-      const bodyData = {
-        uid: currentUser.uid,
-        userName: currentUser.displayName,
-        date: date,
-        time: time,
-        weight: weight,
-        bodyFat: isNaN(bodyFat) ? null : bodyFat,
-        muscleMass: isNaN(muscleMass) ? null : muscleMass,
-        visceralFat: isNaN(visceralFat) ? null : visceralFat,
-        waterPercent: isNaN(waterPercent) ? null : waterPercent,
-        bmr: isNaN(bmr) ? null : bmr,
-        bmi: parseFloat(calculateBMI(userHeight, weight)),
-        memo: memo,
-        createdAt: new Date().toISOString(),
-        timestamp: new Date().getTime()
-      };
+      const bodyCollection = collection(db, "bodyRecords");
+      const q = query(bodyCollection, where("uid", "==", currentUser.uid));
+      const querySnapshot = await getDocs(q);
       
-      console.log('📄 저장할 데이터:', bodyData);
+      bodyRecords = [];
+      window.bodyRecords = [];
+      querySnapshot.forEach(docSnap => {
+        const record = {
+          id: docSnap.id,
+          ...docSnap.data()
+        };
+        bodyRecords.push(record);
+        window.bodyRecords.push(record);
+      });
       
-      const bodyRef = collection(db, "bodyRecords");
-      console.log('📁 컬렉션 참조:', bodyRef);
+      bodyRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+      window.bodyRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
       
-      const docRef = await addDoc(bodyRef, bodyData);
-      console.log('✅ 문서 저장 완료, ID:', docRef.id);
+      console.log('📥 신체 기록 로드 완료:', bodyRecords.length, '개');
       
-      showToast("✅ 신체 정보 저장 완료!");
-      
-      // 입력 폼 초기화
-      if (weightInputField) weightInputField.value = '';
-      if (bodyFatInputField) bodyFatInputField.value = '';
-      if (muscleMassInputField) muscleMassInputField.value = '';
-      if (visceralFatInputField) visceralFatInputField.value = '';
-      if (waterPercentInputField) waterPercentInputField.value = '';
-      if (bmrInputField) bmrInputField.value = '';
-      if (bodyMemoField) bodyMemoField.value = '';
-      
-      console.log('🔄 데이터 다시 로드 시작...');
-      
-      // 데이터 다시 로드
-      await loadBodyRecords();
-      
-      console.log('🎉 저장 완료!');
+      renderBodyRecordsTable();
+      updateBodySummary();
+      updateStatsCards();
       
     } catch (error) {
-      console.error("❌ 신체 정보 저장 오류:", error);
-      console.error("오류 상세:", error.code, error.message);
-      showToast("❌ 신체 정보 저장 실패: " + error.message);
+      console.error("❌ 신체 기록 불러오기 오류:", error);
     }
-  });
-  
-  console.log('✅ 신체 정보 저장 버튼 이벤트 리스너 등록 완료');
-} else {
-  console.error('❌ addBodyDataBtn을 찾을 수 없습니다');
-}
+  };
 
   // ✅ 설정 불러오기
   async function loadSettings() {
@@ -439,6 +462,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         goalWeight = data.goalWeight || 60;
         userHeight = data.userHeight || 165;
+        window.goalWeight = goalWeight;
+        window.userHeight = userHeight;
         
         generatePlan(data.periodStart, data.cycleLength, data.menstrualLength);
         renderPlanTable();
@@ -535,39 +560,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // ✅ 신체 기록 불러오기
-  async function loadBodyRecords() {
-    if (!currentUser) return;
-    
-    try {
-      console.log('📥 신체 기록 불러오기 시작...');
-      
-      const bodyCollection = collection(db, "bodyRecords");
-      const q = query(bodyCollection, where("uid", "==", currentUser.uid));
-      const querySnapshot = await getDocs(q);
-      
-      bodyRecords = [];
-      querySnapshot.forEach(docSnap => {
-        bodyRecords.push({
-          id: docSnap.id,
-          ...docSnap.data()
-        });
-      });
-      
-      // 날짜순 정렬 (최신순)
-      bodyRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
-      console.log('📥 신체 기록 로드 완료:', bodyRecords.length, '개');
-      
-      renderBodyRecordsTable();
-      updateBodySummary();
-      updateStatsCards();
-      
-    } catch (error) {
-      console.error("❌ 신체 기록 불러오기 오류:", error);
-    }
-  }
-
   // ✅ 신체 기록 테이블 렌더링
   function renderBodyRecordsTable() {
     const tbody = document.getElementById('bodyRecordsTable');
@@ -575,7 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     tbody.innerHTML = '';
     
-    // 최근 10개만 표시
     const recentRecords = bodyRecords.slice(0, 10);
     
     recentRecords.forEach(record => {
@@ -603,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       await deleteDoc(doc(db, "bodyRecords", recordId));
       showToast("✅ 기록이 삭제되었습니다.");
-      await loadBodyRecords();
+      await window.loadBodyRecords();
     } catch (error) {
       console.error("❌ 기록 삭제 오류:", error);
       showToast("❌ 기록 삭제 실패");
@@ -650,7 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // 30일 전 데이터와 비교
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
@@ -673,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (muscleGainDisplay) {
       muscleGainDisplay.textContent = (muscleChange > 0 ? '+' : '') + muscleChange.toFixed(1) + 'kg';
-      muscleGainDisplay.style.color = muscleChange > 0 ? '#27ae60' : '#e74c3c';
+            muscleGainDisplay.style.color = muscleChange > 0 ? '#27ae60' : '#e74c3c';
     }
     
     if (currentBMIDisplay) {
@@ -687,6 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (user) {
       currentUser = user;
+      window.currentUser = user; // 전역 변수에도 할당
       console.log('✅ 사용자 정보:', currentUser.displayName);
       
       if (userInfo) {
@@ -704,10 +695,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       await loadSettings();
-      await loadBodyRecords();
+      await window.loadBodyRecords();
       
     } else {
       currentUser = null;
+      window.currentUser = null;
       console.log('❌ 로그아웃 상태');
       
       if (loginBtn) {
@@ -743,6 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ✅ 플랜 생성
 function generatePlan(startDateStr, cycle, menstrual) {
   planData = [];
+  window.planData = [];
   let startDate = startDateStr ? new Date(startDateStr) : new Date();
   const today = new Date();
   
@@ -766,11 +759,14 @@ function generatePlan(startDateStr, cycle, menstrual) {
     if (phase === '월경기') { cardio = "가볍게 걷기 20분"; home = "스트레칭"; }
     if (phase === '배란기') { cardio = "속도5.0, 35분"; home = "IMPT + 코어"; }
     
-    planData.push({
+    const planItem = {
       day: i + 1,
       date: `${day.getMonth() + 1}/${day.getDate()} (${['일','월','화','수','목','금','토'][weekday]})`,
       phase, cardio, home, morningDone: false, eveningDone: false
-    });
+    };
+    
+    planData.push(planItem);
+    window.planData.push(planItem);
   }
 }
 
@@ -794,8 +790,14 @@ function renderPlanTable() {
     const checkboxes = row.querySelectorAll('input[type="checkbox"]');
     const am = checkboxes[0];
     const pm = checkboxes[1];
-    if (am) am.addEventListener('change', () => { p.morningDone = am.checked; updateProgress(); });
-    if (pm) pm.addEventListener('change', () => { p.eveningDone = pm.checked; updateProgress(); });
+    if (am) am.addEventListener('change', () => { 
+      p.morningDone = am.checked; 
+      updateProgress(); 
+    });
+    if (pm) pm.addEventListener('change', () => { 
+      p.eveningDone = pm.checked; 
+      updateProgress(); 
+    });
     tbody.appendChild(row);
   });
   updateProgress();
@@ -806,12 +808,11 @@ function updateProgress() {
   const total = planData.length * 2;
   const done = planData.filter(p => p.morningDone).length + planData.filter(p => p.eveningDone).length;
   const percent = Math.round((done / total) * 100);
-    const progressFill = document.getElementById('progressFill');
+  const progressFill = document.getElementById('progressFill');
   const progressText = document.getElementById('progressText');
   if (progressFill) progressFill.style.width = percent + '%';
   if (progressText) progressText.textContent = percent + '%';
   
-  // 현재 통계 탭이 활성화되어 있으면 차트 업데이트
   const statsSection = document.getElementById('stats');
   if (statsSection && statsSection.classList.contains('active')) {
     console.log('📊 체크박스 변경으로 인한 차트 업데이트');
@@ -840,7 +841,6 @@ function drawWeightChart() {
     return;
   }
   
-  // 기존 차트 삭제
   if (window.weightChartInstance) {
     window.weightChartInstance.destroy();
   }
@@ -885,7 +885,6 @@ function drawWeightChart() {
     } else {
       console.log('📊 실제 체중 데이터로 차트 그리기');
       
-      // 최근 30개 데이터만 사용
       const recentData = bodyRecords.slice(0, 30).reverse();
       
       window.weightChartInstance = new Chart(ctx, {
@@ -946,7 +945,6 @@ function drawBodyFatChart() {
     return;
   }
   
-  // 기존 차트 삭제
   if (window.bodyFatChartInstance) {
     window.bodyFatChartInstance.destroy();
   }
@@ -1044,7 +1042,6 @@ function drawMuscleChart() {
     return;
   }
   
-  // 기존 차트 삭제
   if (window.muscleChartInstance) {
     window.muscleChartInstance.destroy();
   }
@@ -1142,7 +1139,6 @@ function drawWorkoutChart() {
     return;
   }
   
-  // 기존 차트 삭제
   if (window.workoutChartInstance) {
     window.workoutChartInstance.destroy();
   }
@@ -1177,7 +1173,6 @@ function drawWorkoutChart() {
         }
       });
     } else {
-      // 실제 데이터 계산
       const morningDone = planData.filter(p => p.morningDone).length;
       const eveningDone = planData.filter(p => p.eveningDone).length;
       const total = planData.length;
@@ -1199,9 +1194,9 @@ function drawWorkoutChart() {
           datasets: [{
             data: [morningDone, eveningDone, notDone],
             backgroundColor: [
-              '#3498db',  // 파란색 - 아침 운동
-              '#e74c3c',  // 빨간색 - 저녁 운동
-              '#ecf0f1'   // 회색 - 미완료
+              '#3498db',
+              '#e74c3c',
+              '#ecf0f1'
             ],
             borderWidth: 2,
             borderColor: '#fff'
