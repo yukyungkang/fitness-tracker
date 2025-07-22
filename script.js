@@ -212,19 +212,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ✅ 로그인 상태 감지
   onAuthStateChanged(auth, async (user) => {
+  console.log('로그인 상태 변경:', user ? '로그인됨' : '로그아웃됨');
+  
   const loginBtn = document.getElementById('loginBtn');
   const userSection = document.getElementById('userSection');
   const userInfo = document.getElementById('userInfo');
   
   if (user) {
     currentUser = user;
+    console.log('사용자 정보:', currentUser.displayName);
+    
     if (userInfo) userInfo.textContent = `정보: ${currentUser.displayName}`;
-    if (loginBtn) loginBtn.style.display = 'none';
-    if (userSection) userSection.style.display = 'block';
+    if (loginBtn) {
+      loginBtn.style.display = 'none';
+      console.log('로그인 버튼 숨김');
+    }
+    if (userSection) {
+      userSection.style.display = 'block';
+      console.log('사용자 섹션 표시');
+    }
+    
+    // 데이터 로드 함수들이 있다면 여기서 호출
+    // await loadSettings();
+    // await loadWeights();
+    // await loadSettingsHistory();
+    
   } else {
     currentUser = null;
-    if (loginBtn) loginBtn.style.display = 'block';
-    if (userSection) userSection.style.display = 'none';
+    console.log('로그아웃 상태');
+    
+    if (loginBtn) {
+      loginBtn.style.display = 'block';
+      console.log('로그인 버튼 표시');
+    }
+    if (userSection) {
+      userSection.style.display = 'none';
+      console.log('사용자 섹션 숨김');
+    }
+    if (userInfo) userInfo.textContent = '';
   }
 });
 
