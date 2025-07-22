@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ✅ Firebase 설정
 const firebaseConfig = {
@@ -21,7 +21,8 @@ const provider = new GoogleAuthProvider();
 let currentUser = null;
 let planData = [];
 let goalWeight = 60;
-let weightRecords = [];
+let bodyRecords = [];
+let userHeight = 165; // 기본값
 
 // ✅ Toast 함수
 function showToast(msg) {
@@ -41,6 +42,13 @@ function showToast(msg) {
     div.classList.remove('show');
     setTimeout(() => div.remove(), 400);
   }, 3000);
+}
+
+// ✅ BMI 계산 함수
+function calculateBMI(height, weight) {
+  if (!height || !weight) return 0;
+  const heightInM = height / 100;
+  return (weight / (heightInM * heightInM)).toFixed(1);
 }
 
 // ✅ 탭 전환 함수
@@ -72,8 +80,7 @@ function switchTab(tabName) {
       console.log('📊 통계 탭 감지됨! 차트 그리기 시작');
       setTimeout(() => {
         console.log('📊 차트 함수 호출 시작');
-        drawWeightChart();
-        drawWorkoutChart();
+        drawAllCharts();
       }, 300);
     }
   }
@@ -91,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('로그인 버튼:', loginBtn);
   console.log('사용자 섹션:', userSection);
-  console.log('인증 섹션:', document.querySelector('.auth-section'));
   
   // ✅ 초기 상태 설정
   if (loginBtn) {
@@ -121,19 +127,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ✅ DOM 요소 참조
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-  const addWeightBtn = document.getElementById('addWeightBtn');
-  const dateInput = document.getElementById('dateInput');
+  const addBodyDataBtn = document.getElementById('addBodyDataBtn');
+  const measureDate = document.getElementById('measureDate');
+  const measureTime = document.getElementById('measureTime');
   const weightInput = document.getElementById('weightInput');
-  const goalWeightDisplay = document.getElementById('goalWeightDisplay');
-  const currentWeightDisplay = document.getElementById('currentWeightDisplay');
-  const remainingWeightDisplay = document.getElementById('remainingWeightDisplay');
+  const bodyFatInput = document.getElementById('bodyFatInput');
+  const muscleMassInput = document.getElementById('muscleMassInput');
+  const visceralFatInput = document.getElementById('visceralFatInput');
+  const waterPercentInput = document.getElementById('waterPercentInput');
+  const bmrInput = document.getElementById('bmrInput');
+  const bodyMemo = document.getElementById('bodyMemo');
   const prevPeriodStartInput = document.getElementById('prevPeriodStart');
   const periodStartInput = document.getElementById('periodStart');
   const cycleLengthInput = document.getElementById('cycleLength');
   const menstrualLengthInput = document.getElementById('menstrualLength');
   const goalWeightInput = document.getElementById('goalWeight');
+  const userHeightInput = document.getElementById('userHeight');
   const avgCycleDisplay = document.getElementById('avgCycleDisplay');
-  const weightTable = document.getElementById('weightTable');
+
+  // ✅ 오늘 날짜 기본값 설정
+  if (measureDate) {
+    measureDate.value = new Date().toISOString().split('T')[0];
+  }
 
   // ✅ 로그인 이벤트
   if (loginBtn) {
@@ -203,13 +218,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const cycleLength = parseInt(cycleLengthInput?.value || 28);
       const menstrualLength = parseInt(menstrualLengthInput?.value || 5);
       goalWeight = parseFloat(goalWeightInput?.value || 60);
+      userHeight = parseFloat(userHeightInput?.value || 165);
       
       console.log('📝 입력 데이터:', {
         start,
         prevStart,
         cycleLength,
         menstrualLength,
-        goalWeight
+        goalWeight,
+        userHeight
       });
       
       if (!start || !cycleLength || !menstrualLength) {
@@ -229,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
           cycleLength,
           menstrualLength,
           goalWeight,
+          userHeight,
           updatedAt: new Date().toISOString()
         });
         console.log('✅ 사용자 설정 저장 완료');
@@ -259,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 3. 플랜 재생성
         generatePlan(start, cycleLength, menstrualLength);
         renderPlanTable();
-        if (goalWeightDisplay) goalWeightDisplay.textContent = goalWeight;
+        updateBodySummary();
         
         // 4. 히스토리 다시 로드
         setTimeout(async () => {
@@ -274,19 +292,73 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ✅ 체중 기록 추가
-  if (addWeightBtn) {
-    addWeightBtn.addEventListener('click', async () => {
-      const date = dateInput?.value;
-      const weight = parseFloat(weightInput?.value);
-      if (!date || !weight) return showToast("날짜와 체중 입력");
+  // ✅ 신체 정보 기록 추가
+  if (addBodyDataBtn) {
+    addBodyDataBtn.addEventListener('click', async () => {
+      console.log('📊 신체 정보 저장 버튼 클릭됨');
       
-      weightRecords.push({ date, weight });
-      weightRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
-      renderWeight();
-      await saveWeights();
-      if (weightInput) weightInput.value = '';
-      showToast("✅ 체중 기록 추가됨");
+      if (!currentUser) {
+        return showToast("로그인이 필요합니다.");
+      }
+      
+      const date = measureDate?.value;
+      const time = measureTime?.value;
+      const weight = parseFloat(weightInput?.value);
+      const bodyFat = parseFloat(bodyFatInput?.value);
+      const muscleMass = parseFloat(muscleMassInput?.value);
+      const visceralFat = parseFloat(visceralFatInput?.value);
+      const waterPercent = parseFloat(waterPercentInput?.value);
+      const bmr = parseFloat(bmrInput?.value);
+      const memo = bodyMemo?.value;
+      
+      if (!date || !weight) {
+        return showToast("날짜와 체중은 필수 입력 항목입니다.");
+      }
+      
+      try {
+        showToast("📊 신체 정보 저장 중...");
+        
+        const bodyData = {
+          uid: currentUser.uid,
+          date,
+          time,
+          weight,
+          bodyFat: bodyFat || null,
+          muscleMass: muscleMass || null,
+          visceralFat: visceralFat || null,
+          waterPercent: waterPercent || null,
+          bmr: bmr || null,
+          bmi: calculateBMI(userHeight, weight),
+          memo: memo || '',
+          createdAt: new Date().toISOString()
+        };
+        
+        console.log('📝 신체 정보 데이터:', bodyData);
+        
+        const bodyRef = collection(db, "bodyRecords");
+        await addDoc(bodyRef, bodyData);
+        
+        console.log('✅ 신체 정보 저장 완료');
+        showToast("✅ 신체 정보 저장 완료!");
+        
+        // 입력 폼 초기화
+        if (weightInput) weightInput.value = '';
+        if (bodyFatInput) bodyFatInput.value = '';
+        if (muscleMassInput) muscleMassInput.value = '';
+        if (visceralFatInput) visceralFatInput.value = '';
+        if (waterPercentInput) waterPercentInput.value = '';
+        if (bmrInput) bmrInput.value = '';
+        if (bodyMemo) bodyMemo.value = '';
+        
+        // 데이터 다시 로드
+        await loadBodyRecords();
+        updateBodySummary();
+        updateStatsCards();
+        
+      } catch (error) {
+        console.error("❌ 신체 정보 저장 오류:", error);
+        showToast("❌ 신체 정보 저장 실패: " + error.message);
+      }
     });
   }
 
@@ -308,10 +380,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cycleLengthInput) cycleLengthInput.value = data.cycleLength || 28;
         if (menstrualLengthInput) menstrualLengthInput.value = data.menstrualLength || 5;
         if (goalWeightInput) goalWeightInput.value = data.goalWeight || 60;
+        if (userHeightInput) userHeightInput.value = data.userHeight || 165;
         if (avgCycleDisplay) avgCycleDisplay.textContent = data.cycleLength || 28;
         
         goalWeight = data.goalWeight || 60;
-        if (goalWeightDisplay) goalWeightDisplay.textContent = goalWeight;
+        userHeight = data.userHeight || 165;
         
         generatePlan(data.periodStart, data.cycleLength, data.menstrualLength);
         renderPlanTable();
@@ -346,7 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     try {
       console.log('📚 설정 히스토리 로드 시작...');
-      console.log('👤 현재 사용자 UID:', currentUser.uid);
       
       const historyCollection = collection(db, "settingsHistory");
       const querySnapshot = await getDocs(historyCollection);
@@ -356,7 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let historyList = [];
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
-        console.log('📄 문서:', docSnap.id, data);
         
         if (data.uid === currentUser.uid) {
           historyList.push({
@@ -366,8 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       
-            console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
-      console.log('📋 히스토리 리스트:', historyList);
+      console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
       
       historyList.sort((a, b) => {
         const timeA = a.timestamp || new Date(a.savedAt).getTime();
@@ -380,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let html = '';
       if (historyList.length === 0) {
         html = '<div class="no-history">저장된 설정 기록이 없습니다. 설정을 저장해보세요!</div>';
-        console.log('📝 히스토리가 없습니다');
       } else {
         historyList.forEach((item, index) => {
           const date = item.savedAtKST || item.savedAt.slice(0, 10);
@@ -397,14 +466,11 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `;
         });
-        console.log(`📝 히스토리 HTML 생성 완료 (${historyList.length}개)`);
       }
       
       if (historyContainer) {
         historyContainer.innerHTML = html;
         console.log('✅ 히스토리 HTML 업데이트 완료');
-      } else {
-        console.error('❌ settingsHistoryList 요소를 찾을 수 없습니다');
       }
       
     } catch (error) {
@@ -415,52 +481,149 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // ✅ 체중 데이터 저장
-  async function saveWeights() {
+  // ✅ 신체 기록 불러오기
+  async function loadBodyRecords() {
     if (!currentUser) return;
+    
     try {
-      const ref = doc(db, "weightData", currentUser.uid);
-      await setDoc(ref, { 
-        records: weightRecords,
-        updatedAt: new Date().toISOString()
+      console.log('📥 신체 기록 불러오기 시작...');
+      
+      const bodyCollection = collection(db, "bodyRecords");
+      const q = query(bodyCollection, where("uid", "==", currentUser.uid));
+      const querySnapshot = await getDocs(q);
+      
+      bodyRecords = [];
+      querySnapshot.forEach(docSnap => {
+        bodyRecords.push({
+          id: docSnap.id,
+          ...docSnap.data()
+        });
       });
-      console.log('💾 체중 데이터 저장 완료');
+      
+      // 날짜순 정렬 (최신순)
+      bodyRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      console.log('📥 신체 기록 로드 완료:', bodyRecords.length, '개');
+      
+      renderBodyRecordsTable();
+      updateBodySummary();
+      updateStatsCards();
+      
     } catch (error) {
-      console.error("체중 데이터 저장 오류:", error);
+      console.error("❌ 신체 기록 불러오기 오류:", error);
     }
   }
 
-  // ✅ 체중 데이터 불러오기
-  async function loadWeights() {
-    if (!currentUser) return;
-    try {
-      const ref = doc(db, "weightData", currentUser.uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        weightRecords = snap.data().records || [];
-        renderWeight();
-        console.log('📥 체중 데이터 로드 완료:', weightRecords.length, '개');
-      }
-    } catch (error) {
-      console.error("체중 데이터 불러오기 오류:", error);
-    }
-  }
-
-  // ✅ 체중 테이블 렌더링
-  function renderWeight() {
-    if (!weightTable) return;
+  // ✅ 신체 기록 테이블 렌더링
+  function renderBodyRecordsTable() {
+    const tbody = document.getElementById('bodyRecordsTable');
+    if (!tbody) return;
     
-    weightTable.innerHTML = '';
-    weightRecords.forEach(r => {
+    tbody.innerHTML = '';
+    
+    // 최근 10개만 표시
+    const recentRecords = bodyRecords.slice(0, 10);
+    
+    recentRecords.forEach(record => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td>${r.date}</td><td>${r.weight}kg</td>`;
-      weightTable.appendChild(row);
+      row.innerHTML = `
+        <td>${record.date}</td>
+        <td>${record.time === 'morning' ? '아침' : '저녁'}</td>
+        <td>${record.weight}kg</td>
+        <td>${record.bodyFat ? record.bodyFat + '%' : '-'}</td>
+        <td>${record.muscleMass ? record.muscleMass + 'kg' : '-'}</td>
+        <td>${record.bmi}</td>
+        <td>${record.memo || '-'}</td>
+        <td><button class="delete-btn" onclick="deleteBodyRecord('${record.id}')">삭제</button></td>
+      `;
+      tbody.appendChild(row);
     });
+  }
+
+  // ✅ 신체 기록 삭제
+  window.deleteBodyRecord = async function(recordId) {
+    if (!currentUser) return;
     
-    if (weightRecords.length > 0) {
-      const current = weightRecords[weightRecords.length - 1].weight;
-      if (currentWeightDisplay) currentWeightDisplay.textContent = current;
-      if (remainingWeightDisplay) remainingWeightDisplay.textContent = (current - goalWeight).toFixed(1);
+    if (!confirm('이 기록을 삭제하시겠습니까?')) return;
+    
+    try {
+      await deleteDoc(doc(db, "bodyRecords", recordId));
+      showToast("✅ 기록이 삭제되었습니다.");
+      await loadBodyRecords();
+    } catch (error) {
+      console.error("❌ 기록 삭제 오류:", error);
+      showToast("❌ 기록 삭제 실패");
+    }
+  };
+
+  // ✅ 신체 정보 요약 업데이트
+  function updateBodySummary() {
+    const currentWeightDisplay = document.getElementById('currentWeightDisplay');
+    const currentBodyFatDisplay = document.getElementById('currentBodyFatDisplay');
+    const currentMuscleDisplay = document.getElementById('currentMuscleDisplay');
+    const remainingWeightDisplay = document.getElementById('remainingWeightDisplay');
+    
+    if (bodyRecords.length > 0) {
+      const latest = bodyRecords[0];
+      
+      if (currentWeightDisplay) currentWeightDisplay.textContent = latest.weight + 'kg';
+      if (currentBodyFatDisplay) currentBodyFatDisplay.textContent = latest.bodyFat ? latest.bodyFat + '%' : '-%';
+      if (currentMuscleDisplay) currentMuscleDisplay.textContent = latest.muscleMass ? latest.muscleMass + 'kg' : '-kg';
+      if (remainingWeightDisplay) {
+        const remaining = latest.weight - goalWeight;
+        remainingWeightDisplay.textContent = remaining > 0 ? remaining.toFixed(1) + 'kg' : '목표 달성!';
+      }
+    } else {
+      if (currentWeightDisplay) currentWeightDisplay.textContent = '-kg';
+      if (currentBodyFatDisplay) currentBodyFatDisplay.textContent = '-%';
+      if (currentMuscleDisplay) currentMuscleDisplay.textContent = '-kg';
+      if (remainingWeightDisplay) remainingWeightDisplay.textContent = '-kg';
+    }
+  }
+
+  // ✅ 통계 카드 업데이트
+  function updateStatsCards() {
+    const weightChangeDisplay = document.getElementById('weightChangeDisplay');
+    const bodyFatChangeDisplay = document.getElementById('bodyFatChangeDisplay');
+    const muscleGainDisplay = document.getElementById('muscleGainDisplay');
+    const currentBMIDisplay = document.getElementById('currentBMIDisplay');
+    
+    if (bodyRecords.length < 2) {
+      if (weightChangeDisplay) weightChangeDisplay.textContent = '0kg';
+      if (bodyFatChangeDisplay) bodyFatChangeDisplay.textContent = '0%';
+      if (muscleGainDisplay) muscleGainDisplay.textContent = '0kg';
+      if (currentBMIDisplay) currentBMIDisplay.textContent = bodyRecords.length > 0 ? bodyRecords[0].bmi : '0';
+      return;
+    }
+    
+    // 30일 전 데이터와 비교
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recent = bodyRecords[0];
+    const thirtyDaysAgoRecord = bodyRecords.find(r => new Date(r.date) <= thirtyDaysAgo) || bodyRecords[bodyRecords.length - 1];
+    
+    const weightChange = recent.weight - thirtyDaysAgoRecord.weight;
+    const bodyFatChange = (recent.bodyFat || 0) - (thirtyDaysAgoRecord.bodyFat || 0);
+    const muscleChange = (recent.muscleMass || 0) - (thirtyDaysAgoRecord.muscleMass || 0);
+    
+    if (weightChangeDisplay) {
+      weightChangeDisplay.textContent = (weightChange > 0 ? '+' : '') + weightChange.toFixed(1) + 'kg';
+      weightChangeDisplay.style.color = weightChange > 0 ? '#e74c3c' : '#27ae60';
+    }
+    
+    if (bodyFatChangeDisplay) {
+      bodyFatChangeDisplay.textContent = (bodyFatChange > 0 ? '+' : '') + bodyFatChange.toFixed(1) + '%';
+      bodyFatChangeDisplay.style.color = bodyFatChange > 0 ? '#e74c3c' : '#27ae60';
+    }
+    
+    if (muscleGainDisplay) {
+      muscleGainDisplay.textContent = (muscleChange > 0 ? '+' : '') + muscleChange.toFixed(1) + 'kg';
+      muscleGainDisplay.style.color = muscleChange > 0 ? '#27ae60' : '#e74c3c';
+    }
+    
+    if (currentBMIDisplay) {
+      currentBMIDisplay.textContent = recent.bmi;
     }
   }
 
@@ -487,7 +650,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       await loadSettings();
-      await loadWeights();
+      await loadBodyRecords();
       
     } else {
       currentUser = null;
@@ -589,7 +752,7 @@ function updateProgress() {
   const total = planData.length * 2;
   const done = planData.filter(p => p.morningDone).length + planData.filter(p => p.eveningDone).length;
   const percent = Math.round((done / total) * 100);
-  const progressFill = document.getElementById('progressFill');
+    const progressFill = document.getElementById('progressFill');
   const progressText = document.getElementById('progressText');
   if (progressFill) progressFill.style.width = percent + '%';
   if (progressText) progressText.textContent = percent + '%';
@@ -604,29 +767,32 @@ function updateProgress() {
   }
 }
 
-// ✅ Chart.js 체중 차트
+// ✅ 모든 차트 그리기
+function drawAllCharts() {
+  console.log('📊 모든 차트 그리기 시작');
+  drawWeightChart();
+  drawBodyFatChart();
+  drawMuscleChart();
+  drawWorkoutChart();
+}
+
+// ✅ 체중 변화 차트
 function drawWeightChart() {
-  console.log('📊 체중 차트 그리기 함수 시작...');
+  console.log('📊 체중 차트 그리기 시작...');
   
   const ctx = document.getElementById('weightChart');
-  console.log('📊 weightChart 요소:', ctx);
-  
   if (!ctx) {
     console.error('❌ weightChart 요소를 찾을 수 없습니다');
     return;
   }
   
-  console.log('📊 체중 데이터 개수:', weightRecords.length);
-  console.log('📊 체중 데이터:', weightRecords);
-  
   // 기존 차트 삭제
   if (window.weightChartInstance) {
-    console.log('📊 기존 체중 차트 삭제');
     window.weightChartInstance.destroy();
   }
   
   try {
-    if (weightRecords.length === 0) {
+    if (bodyRecords.length === 0) {
       console.log('📊 체중 데이터가 없어서 빈 차트를 그립니다');
       
       window.weightChartInstance = new Chart(ctx, {
@@ -635,9 +801,9 @@ function drawWeightChart() {
           labels: ['데이터가 없습니다'],
           datasets: [{
             label: '체중 (kg)',
-            data: [60], // 기본값
-            borderColor: '#27ae60',
-            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            data: [goalWeight],
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
             fill: true,
             tension: 0.4
           }]
@@ -648,24 +814,16 @@ function drawWeightChart() {
           scales: {
             y: {
               beginAtZero: false,
-              min: 50,
-              max: 80,
               title: {
                 display: true,
                 text: '체중 (kg)'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: '날짜'
               }
             }
           },
           plugins: {
             title: {
               display: true,
-              text: '체중 변화 추이 (체중 기록 탭에서 데이터를 추가해주세요)'
+              text: '체중 변화 추이 (신체 정보 탭에서 데이터를 추가해주세요)'
             }
           }
         }
@@ -673,17 +831,27 @@ function drawWeightChart() {
     } else {
       console.log('📊 실제 체중 데이터로 차트 그리기');
       
+      // 최근 30개 데이터만 사용
+      const recentData = bodyRecords.slice(0, 30).reverse();
+      
       window.weightChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: weightRecords.map(r => r.date),
+          labels: recentData.map(r => r.date),
           datasets: [{
             label: '체중 (kg)',
-            data: weightRecords.map(r => r.weight),
-            borderColor: '#27ae60',
-            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            data: recentData.map(r => r.weight),
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
             fill: true,
             tension: 0.4
+          }, {
+            label: '목표 체중',
+            data: recentData.map(() => goalWeight),
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+            borderDash: [5, 5],
+            fill: false
           }]
         },
         options: {
@@ -695,12 +863,6 @@ function drawWeightChart() {
               title: {
                 display: true,
                 text: '체중 (kg)'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: '날짜'
               }
             }
           },
@@ -714,29 +876,220 @@ function drawWeightChart() {
       });
     }
     
-    console.log('✅ 체중 차트 그리기 성공');
+    console.log('✅ 체중 차트 그리기 완료');
   } catch (error) {
     console.error('❌ 체중 차트 그리기 실패:', error);
   }
 }
 
+// ✅ 체지방률 변화 차트
+function drawBodyFatChart() {
+  console.log('📊 체지방률 차트 그리기 시작...');
+  
+  const ctx = document.getElementById('bodyFatChart');
+  if (!ctx) {
+    console.error('❌ bodyFatChart 요소를 찾을 수 없습니다');
+    return;
+  }
+  
+  // 기존 차트 삭제
+  if (window.bodyFatChartInstance) {
+    window.bodyFatChartInstance.destroy();
+  }
+  
+  try {
+    const bodyFatData = bodyRecords.filter(r => r.bodyFat).slice(0, 30).reverse();
+    
+    if (bodyFatData.length === 0) {
+      console.log('📊 체지방률 데이터가 없어서 빈 차트를 그립니다');
+      
+      window.bodyFatChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['데이터가 없습니다'],
+          datasets: [{
+            label: '체지방률 (%)',
+            data: [20],
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: '체지방률 (%)'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: '체지방률 변화 (체지방률 데이터를 추가해주세요)'
+            }
+          }
+        }
+      });
+    } else {
+      console.log('📊 실제 체지방률 데이터로 차트 그리기');
+      
+      window.bodyFatChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: bodyFatData.map(r => r.date),
+          datasets: [{
+            label: '체지방률 (%)',
+            data: bodyFatData.map(r => r.bodyFat),
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: '체지방률 (%)'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: '체지방률 변화'
+            }
+          }
+        }
+      });
+    }
+    
+    console.log('✅ 체지방률 차트 그리기 완료');
+  } catch (error) {
+    console.error('❌ 체지방률 차트 그리기 실패:', error);
+  }
+}
+
+// ✅ 근육량 변화 차트
+function drawMuscleChart() {
+  console.log('📊 근육량 차트 그리기 시작...');
+  
+  const ctx = document.getElementById('muscleChart');
+  if (!ctx) {
+    console.error('❌ muscleChart 요소를 찾을 수 없습니다');
+    return;
+  }
+  
+  // 기존 차트 삭제
+  if (window.muscleChartInstance) {
+    window.muscleChartInstance.destroy();
+  }
+  
+  try {
+    const muscleData = bodyRecords.filter(r => r.muscleMass).slice(0, 30).reverse();
+    
+    if (muscleData.length === 0) {
+      console.log('📊 근육량 데이터가 없어서 빈 차트를 그립니다');
+      
+      window.muscleChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['데이터가 없습니다'],
+          datasets: [{
+            label: '근육량 (kg)',
+            data: [40],
+            borderColor: '#27ae60',
+            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: '근육량 (kg)'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: '근육량 변화 (근육량 데이터를 추가해주세요)'
+            }
+          }
+        }
+      });
+    } else {
+      console.log('📊 실제 근육량 데이터로 차트 그리기');
+      
+      window.muscleChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: muscleData.map(r => r.date),
+          datasets: [{
+            label: '근육량 (kg)',
+            data: muscleData.map(r => r.muscleMass),
+            borderColor: '#27ae60',
+            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: '근육량 (kg)'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: '근육량 변화'
+            }
+          }
+        }
+      });
+    }
+    
+    console.log('✅ 근육량 차트 그리기 완료');
+  } catch (error) {
+    console.error('❌ 근육량 차트 그리기 실패:', error);
+  }
+}
+
 // ✅ 운동 완료율 차트
 function drawWorkoutChart() {
-  console.log('📊 운동 차트 그리기 함수 시작...');
+  console.log('📊 운동 완료율 차트 그리기 시작...');
   
   const ctx = document.getElementById('workoutChart');
-  console.log('📊 workoutChart 요소:', ctx);
-  
   if (!ctx) {
     console.error('❌ workoutChart 요소를 찾을 수 없습니다');
     return;
   }
   
-  console.log('📊 플랜 데이터 개수:', planData.length);
-  
   // 기존 차트 삭제
   if (window.workoutChartInstance) {
-    console.log('📊 기존 운동 차트 삭제');
     window.workoutChartInstance.destroy();
   }
   
@@ -827,8 +1180,8 @@ function drawWorkoutChart() {
       });
     }
     
-    console.log('✅ 운동 차트 그리기 성공');
+    console.log('✅ 운동 완료율 차트 그리기 완료');
   } catch (error) {
-    console.error('❌ 운동 차트 그리기 실패:', error);
+    console.error('❌ 운동 완료율 차트 그리기 실패:', error);
   }
 }
