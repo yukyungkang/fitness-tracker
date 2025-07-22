@@ -114,7 +114,7 @@ section {
   display: none;
   position: relative;
   z-index: 1;
-  max-width: 900px;
+  max-width: 1200px;
   margin: auto;
   padding: 20px;
 }
@@ -180,9 +180,257 @@ th {
   transition: width 0.3s ease;
 }
 
-.goal-info {
+/* ✅ 신체 정보 스타일 */
+.body-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+}
+
+.summary-icon {
+  font-size: 2.5rem;
+  margin-right: 15px;
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.summary-value {
+  font-size: 1.5rem;
   font-weight: bold;
-  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+/* 입력 폼 스타일 */
+.body-input-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.input-form {
+  max-width: 800px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
+  transform: translateY(-2px);
+}
+
+/* 기록 테이블 스타일 */
+.records-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.body-records-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.body-records-table th {
+  background: #2c3e50;
+  color: white;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.body-records-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.body-records-table tr:hover {
+  background: #f8f9fa;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.delete-btn:hover {
+  background: #c7321e;
+}
+
+/* 통계 페이지 스타일 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-card:nth-child(2) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card:nth-child(3) {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card:nth-child(4) {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stat-icon {
+  font-size: 3rem;
+  margin-right: 20px;
+  opacity: 0.8;
+}
+
+.stat-content h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-period {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* 차트 그리드 */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+}
+
+.chart-container {
+  background: #ffffff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.chart-container h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 300px !important;
 }
 
 /* Toast 알림 */
@@ -209,29 +457,6 @@ th {
 .toast.show {
   opacity: 1;
   transform: translateX(0);
-}
-
-/* 입력 필드 스타일 */
-input[type="date"], input[type="number"], input[type="text"] {
-  padding: 8px;
-  margin: 5px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-/* 일반 버튼 스타일 (헤더 버튼 제외) */
-section button, nav button:not(.auth-section button) {
-  padding: 10px 15px;
-  background: #000;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin: 5px;
-}
-
-section button:hover {
-  background: #333;
 }
 
 /* 설정 히스토리 스타일 */
@@ -286,6 +511,9 @@ section button:hover {
 
 #settings input {
   margin-bottom: 15px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 #settings h3 {
@@ -296,23 +524,18 @@ section button:hover {
   padding-bottom: 5px;
 }
 
-/* ✅ 차트 컨테이너 스타일 */
-#weightChart, #workoutChart {
-  width: 100% !important;
-  height: 400px !important;
-  max-height: 400px !important;
-  margin: 20px 0;
-  border: 1px solid #eee;
-  border-radius: 8px;
+#settings button {
+  padding: 10px 15px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 5px;
 }
 
-#stats {
-  text-align: center;
-}
-
-#stats h2, #stats h3 {
-  margin: 30px 0 20px 0;
-  color: #2c3e50;
+#settings button:hover {
+  background: #333;
 }
 
 /* ✅ 반응형 - 모바일 */
@@ -340,7 +563,23 @@ section button:hover {
     flex: 1 1 100%;
   }
   
-  #weightChart, #workoutChart {
-    height: 300px !important;
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .body-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container canvas {
+    height: 250px !important;
   }
 }
