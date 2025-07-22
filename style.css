@@ -239,7 +239,23 @@ canvas {
   max-width: 100%;
   margin: 20px 0;
 }
+/* 차트 컨테이너 높이 설정 */
+#weightChart, #workoutChart {
+  max-width: 100%;
+  height: 400px !important;
+  margin: 20px 0;
+}
 
+/* 통계 섹션 스타일 */
+#stats h2, #stats h3 {
+  text-align: center;
+  margin: 20px 0;
+}
+
+#stats canvas {
+  display: block;
+  margin: 20px auto;
+}
 /* 설정 히스토리 스타일 */
 #settingsHistoryList {
   margin-top: 15px;
