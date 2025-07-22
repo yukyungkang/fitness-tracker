@@ -33,17 +33,17 @@
   <div class="card-container">
     <div class="card red">
       <h3>월경기 (1~5일)</h3>
-      <p>저강도 운동</p>
+      <p>저강도</p>
       <ul><li>가벼운 걷기</li><li>스트레칭</li><li>요가</li></ul>
     </div>
     <div class="card green">
       <h3>여포기 (6~13일)</h3>
-      <p>중강도 운동</p>
+      <p>중강도</p>
       <ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
     </div>
     <div class="card yellow">
       <h3>배란기 (14~15일)</h3>
-      <p>고강도 운동</p>
+      <p>고강도</p>
       <ul><li>빠른 속도 걷기</li><li>IMPT + 코어 루틴</li></ul>
     </div>
     <div class="card purple">
@@ -57,6 +57,10 @@
 <!-- 플랜 -->
 <section id="plan">
   <h2>90일 다이어트 플랜</h2>
+  <div class="progress-container">
+    <p>전체 진행률: <span id="progressText">0%</span></p>
+    <div class="progress-bar"><div id="progressFill"></div></div>
+  </div>
   <table>
     <thead>
       <tr>
@@ -70,6 +74,9 @@
 <!-- 체중 기록 -->
 <section id="weight">
   <h2>체중 기록</h2>
+  <div class="goal-info">
+    목표 체중: <span id="goalWeightDisplay">-</span>kg / 현재: <span id="currentWeightDisplay">-</span>kg / 남은: <span id="remainingWeightDisplay">-</span>kg
+  </div>
   <input type="date" id="dateInput">
   <input type="number" id="weightInput" placeholder="체중 (kg)">
   <button id="addWeightBtn">추가</button>
@@ -91,12 +98,17 @@
 <!-- 설정 -->
 <section id="settings">
   <h2>설정</h2>
+  <label>이전 생리 시작일:</label>
+  <input type="date" id="prevPeriodStart"><br><br>
   <label>마지막 생리 시작일:</label>
   <input type="date" id="periodStart"><br><br>
+  <p>평균 주기: <span id="avgCycleDisplay">28</span>일</p><br>
   <label>평균 주기 (일):</label>
   <input type="number" id="cycleLength" value="28"><br><br>
   <label>월경기 길이 (일):</label>
   <input type="number" id="menstrualLength" value="5"><br><br>
+  <label>목표 체중 (kg):</label>
+  <input type="number" id="goalWeight" value="60"><br><br>
   <button id="saveSettingsBtn">저장</button>
 </section>
 
