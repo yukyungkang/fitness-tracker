@@ -17,9 +17,7 @@ header button {
   border: 1px solid #000;
   cursor: pointer;
 }
-header button:hover {
-  background: #ddd;
-}
+header button:hover { background: #ddd; }
 nav {
   display: flex;
   justify-content: center;
@@ -41,9 +39,7 @@ section {
   max-width: 900px;
   margin: auto;
 }
-section.active {
-  display: block;
-}
+section.active { display: block; }
 table {
   width: 100%;
   border-collapse: collapse;
@@ -63,24 +59,18 @@ canvas {
   max-height: 300px;
   margin-top: 20px;
 }
-.list {
-  margin-top: 10px;
-}
+.list { margin-top: 10px; }
 .list-item {
   padding: 8px;
   border-bottom: 1px solid #ddd;
 }
 @media(max-width:768px) {
-  nav button {
-    font-size: 14px;
-  }
+  nav button { font-size: 14px; }
   table, thead, tbody, th, td, tr {
     display: block;
     width: 100%;
   }
-  th {
-    display: none;
-  }
+  th { display: none; }
   td {
     padding: 10px;
     border: none;
