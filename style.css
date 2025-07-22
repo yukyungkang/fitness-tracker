@@ -4,6 +4,8 @@ body {
   background: #fff;
   color: #000;
 }
+
+/* ✅ 메뉴와 헤더는 항상 클릭 가능 */
 header {
   background: #000;
   color: #fff;
@@ -11,7 +13,7 @@ header {
   padding: 15px;
   position: sticky;
   top: 0;
-  z-index: 2000; /* ✅ 메뉴 클릭 가능 */
+  z-index: 9999;
 }
 header button {
   margin: 10px;
@@ -26,7 +28,7 @@ nav {
   background: #eee;
   position: sticky;
   top: 60px;
-  z-index: 2000; /* ✅ 메뉴 클릭 가능 */
+  z-index: 9999;
 }
 nav button {
   flex: 1;
@@ -38,13 +40,20 @@ nav button.active {
   background: #000;
   color: #fff;
 }
+
+/* ✅ 섹션 기본은 숨김, active만 표시 */
 section {
-  display: none;
-  padding: 20px;
+  display: none !important;
+  position: relative;
+  z-index: 1;
   max-width: 900px;
   margin: auto;
+  padding: 20px;
 }
-section.active { display: block; }
+section.active {
+  display: block !important;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -59,6 +68,7 @@ th {
   background: #000;
   color: #fff;
 }
+
 .card-container {
   display: flex;
   flex-wrap: wrap;
@@ -74,6 +84,7 @@ th {
 .green { background: #27ae60; }
 .yellow { background: #f1c40f; color: #000; }
 .purple { background: #8e44ad; }
+
 .progress-container {
   margin: 15px 0;
 }
@@ -89,17 +100,19 @@ th {
   width: 0%;
   background: #27ae60;
 }
+
 .goal-info {
   font-weight: bold;
   margin-bottom: 10px;
 }
-/* ✅ Toast 영역 클릭 방지 */
+
+/* ✅ Toast가 클릭 막지 않도록 */
 #toastContainer {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 9999;
-  pointer-events: none; /* ✅ 메뉴 클릭 가능 */
+  pointer-events: none;
 }
 .toast {
   background: #333;
