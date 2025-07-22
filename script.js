@@ -4,7 +4,7 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, o
 
 // ✅ Firebase 설정
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // 실제 Firebase 키 입력
+  apiKey: "AIzaSyBasJig37TExc76J3mlcJ9p5uZLXFrY5CQ", // 실제 Firebase 키 입력
   authDomain: "dietpage-5f49a.firebaseapp.com",
   projectId: "dietpage-5f49a",
   storageBucket: "dietpage-5f49a.firebasestorage.app",
@@ -18,8 +18,33 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ Toast 함수
+// ✅ DOM 요소 참조
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const userInfo = document.getElementById('userInfo');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const addWeightBtn = document.getElementById('addWeightBtn');
+const dateInput = document.getElementById('dateInput');
+const weightInput = document.getElementById('weightInput');
+const goalWeightDisplay = document.getElementById('goalWeightDisplay');
+const currentWeightDisplay = document.getElementById('currentWeightDisplay');
+const remainingWeightDisplay = document.getElementById('remainingWeightDisplay');
 const toastContainer = document.getElementById('toastContainer');
+const prevPeriodStartInput = document.getElementById('prevPeriodStart');
+const periodStartInput = document.getElementById('periodStart');
+const cycleLengthInput = document.getElementById('cycleLength');
+const menstrualLengthInput = document.getElementById('menstrualLength');
+const goalWeightInput = document.getElementById('goalWeight');
+const avgCycleDisplay = document.getElementById('avgCycleDisplay');
+const weightTable = document.getElementById('weightTable');
+
+// ✅ 전역 변수
+let currentUser = null;
+let planData = [];
+let goalWeight = 60;
+let weightRecords = [];
+
+// ✅ Toast 함수
 function showToast(msg) {
   const div = document.createElement('div');
   div.className = 'toast';
@@ -32,23 +57,21 @@ function showToast(msg) {
   }, 3000);
 }
 
-// ✅ Tabs (메뉴 전환)
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
+// ✅ Tabs (메뉴 전환) - DOMContentLoaded 이벤트 사용
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      console.log('탭 클릭됨:', btn.dataset.tab); // 디버깅용
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
   });
 });
 
-let currentUser = null;
-let planData = [];
-let goalWeight = 60;
-let weightRecords = [];
-
 // ✅ 로그인
-loginBtn.onclick = async (e) => {
+loginBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   try {
     await setPersistence(auth, browserLocalPersistence);
@@ -59,14 +82,15 @@ loginBtn.onclick = async (e) => {
     console.error(error.message);
     showToast("❌ 로그인 실패: " + error.message);
   }
-};
+});
 
-logoutBtn.onclick = async () => {
+// ✅ 로그아웃
+logoutBtn.addEventListener('click', async () => {
   await signOut(auth);
   showToast("로그아웃 완료!");
-};
+});
 
-// ✅ 로그인 유지
+// ✅ 로그인 상태 유지
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
@@ -82,18 +106,9 @@ onAuthStateChanged(auth, async (user) => {
     loginBtn.style.display = 'inline';
     logoutBtn.style.display = 'none';
   }
-};
+});
 
 // ✅ 평균 주기 자동 계산
-const prevPeriodStartInput = document.getElementById('prevPeriodStart');
-const periodStartInput = document.getElementById('periodStart');
-const cycleLengthInput = document.getElementById('cycleLength');
-const menstrualLengthInput = document.getElementById('menstrualLength');
-const goalWeightInput = document.getElementById('goalWeight');
-const avgCycleDisplay = document.getElementById('avgCycleDisplay');
-prevPeriodStartInput.addEventListener('change', calcAvgCycle);
-periodStartInput.addEventListener('change', calcAvgCycle);
-
 function calcAvgCycle() {
   const prev = new Date(prevPeriodStartInput.value);
   const last = new Date(periodStartInput.value);
@@ -106,17 +121,21 @@ function calcAvgCycle() {
   }
 }
 
+prevPeriodStartInput.addEventListener('change', calcAvgCycle);
+periodStartInput.addEventListener('change', calcAvgCycle);
+
 // ✅ 설정 저장
-saveSettingsBtn.onclick = async () => {
+saveSettingsBtn.addEventListener('click', async () => {
   if (!currentUser) return showToast("로그인이 필요합니다.");
+  
   const start = periodStartInput.value;
   const prevStart = prevPeriodStartInput.value;
   const cycleLength = parseInt(cycleLengthInput.value);
   const menstrualLength = parseInt(menstrualLengthInput.value);
   goalWeight = parseFloat(goalWeightInput.value);
-
+  
   if (!start || !cycleLength || !menstrualLength) return showToast("모든 항목 입력!");
-
+  
   const ref = doc(db, "userData", currentUser.uid);
   await setDoc(ref, {
     periodStart: start,
@@ -125,7 +144,7 @@ saveSettingsBtn.onclick = async () => {
     menstrualLength,
     goalWeight
   });
-
+  
   const historyRef = doc(db, `settingsHistory/${currentUser.uid}_${Date.now()}`);
   await setDoc(historyRef, {
     uid: currentUser.uid,
@@ -135,13 +154,13 @@ saveSettingsBtn.onclick = async () => {
     cycleLength,
     menstrualLength
   });
-
+  
   showToast("✅ 설정 저장 완료!");
   generatePlan(start, cycleLength, menstrualLength);
   renderPlanTable();
   goalWeightDisplay.textContent = goalWeight;
   await loadSettingsHistory();
-};
+});
 
 // ✅ 설정 불러오기
 async function loadSettings() {
@@ -165,7 +184,7 @@ async function loadSettings() {
   }
 }
 
-// ✅ 설정 히스토리
+// ✅ 설정 히스토리 불러오기
 async function loadSettingsHistory() {
   const q = query(collection(db, "settingsHistory"), where("uid", "==", currentUser.uid), orderBy("savedAt", "desc"), limit(5));
   const querySnapshot = await getDocs(q);
@@ -182,25 +201,27 @@ function generatePlan(startDateStr, cycle, menstrual) {
   planData = [];
   let startDate = startDateStr ? new Date(startDateStr) : new Date();
   const today = new Date();
+  
   for (let i = 0; i < 90; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
     const weekday = day.getDay();
     if (weekday === 0 || weekday === 6) continue; // ✅ 주말 휴식
-
+    
     const diff = Math.floor((day - startDate) / (1000 * 60 * 60 * 24));
     const phaseDay = diff % cycle;
+    
     let phase = '여포기';
     if (phaseDay < menstrual) phase = '월경기';
     else if (phaseDay < 14) phase = '여포기';
     else if (phaseDay === 14) phase = '배란기';
     else phase = '황체기';
-
+    
     let cardio = "경사6%, 속도4.5, 30분";
     let home = "IMPT 루틴";
     if (phase === '월경기') { cardio = "가볍게 걷기 20분"; home = "스트레칭"; }
     if (phase === '배란기') { cardio = "속도5.0, 35분"; home = "IMPT + 코어"; }
-
+    
     planData.push({
       day: i + 1,
       date: `${day.getMonth() + 1}/${day.getDate()} (${['일','월','화','수','목','금','토'][weekday]})`,
@@ -243,18 +264,20 @@ function updateProgress() {
   document.getElementById('progressText').textContent = percent + '%';
 }
 
-// ✅ 체중 기록
-const weightTable = document.getElementById('weightTable');
-addWeightBtn.onclick = () => {
+// ✅ 체중 기록 추가
+addWeightBtn.addEventListener('click', () => {
   const date = dateInput.value;
   const weight = parseFloat(weightInput.value);
   if (!date || !weight) return showToast("날짜와 체중 입력");
+  
   weightRecords.push({ date, weight });
   weightRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
   renderWeight();
+  saveWeights();
   weightInput.value = '';
-};
+});
 
+// ✅ 체중 테이블 렌더링
 function renderWeight() {
   weightTable.innerHTML = '';
   weightRecords.forEach(r => {
@@ -262,6 +285,7 @@ function renderWeight() {
     row.innerHTML = `<td>${r.date}</td><td>${r.weight}</td>`;
     weightTable.appendChild(row);
   });
+  
   if (weightRecords.length > 0) {
     const current = weightRecords[weightRecords.length - 1].weight;
     currentWeightDisplay.textContent = current;
@@ -270,7 +294,25 @@ function renderWeight() {
   }
 }
 
-// ✅ Chart.js
+// ✅ 체중 데이터 저장
+async function saveWeights() {
+  if (!currentUser) return;
+  const ref = doc(db, "weightData", currentUser.uid);
+  await setDoc(ref, { records: weightRecords });
+}
+
+// ✅ 체중 데이터 불러오기
+async function loadWeights() {
+  if (!currentUser) return;
+  const ref = doc(db, "weightData", currentUser.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    weightRecords = snap.data().records || [];
+    renderWeight();
+  }
+}
+
+// ✅ Chart.js 체중 차트
 function drawWeightChart() {
   const ctx = document.getElementById('weightChart').getContext('2d');
   new Chart(ctx, {
@@ -283,6 +325,42 @@ function drawWeightChart() {
         borderColor: '#27ae60',
         fill: false
       }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: false
+        }
+      }
     }
   });
 }
+
+// ✅ 운동 완료율 차트
+function drawWorkoutChart() {
+  const ctx = document.getElementById('workoutChart').getContext('2d');
+  const morningDone = planData.filter(p => p.morningDone).length;
+  const eveningDone = planData.filter(p => p.eveningDone).length;
+  const total = planData.length;
+  
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['아침 완료', '저녁 완료', '미완료'],
+      datasets: [{
+        data: [morningDone, eveningDone, (total * 2) - morningDone - eveningDone],
+        backgroundColor: ['#3498db', '#e74c3c', '#ecf0f1']
+      }]
+    },
+    options: {
+      responsive: true
+    }
+  });
+}
+
+// ✅ 페이지 로드 시 기본 플랜 생성
+document.addEventListener('DOMContentLoaded', function() {
+  generatePlan(null, 28, 5);
+  renderPlanTable();
+});
