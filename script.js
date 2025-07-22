@@ -69,10 +69,11 @@ function switchTab(tabName) {
     
     // 통계 탭일 때 차트 그리기
     if (tabName === 'stats') {
+      console.log('📊 통계 탭 활성화 - 차트 그리기 시작');
       setTimeout(() => {
         drawWeightChart();
         drawWorkoutChart();
-      }, 100);
+      }, 200);
     }
   }
 }
@@ -89,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('로그인 버튼:', loginBtn);
   console.log('사용자 섹션:', userSection);
+  console.log('인증 섹션:', document.querySelector('.auth-section'));
   
   // ✅ 초기 상태 설정
   if (loginBtn) {
@@ -183,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (prevPeriodStartInput) prevPeriodStartInput.addEventListener('change', calcAvgCycle);
   if (periodStartInput) periodStartInput.addEventListener('change', calcAvgCycle);
 
-  // ✅ 설정 저장 (수정된 버전)
+  // ✅ 설정 저장
   if (saveSettingsBtn) {
     saveSettingsBtn.addEventListener('click', async () => {
       console.log('💾 설정 저장 버튼 클릭됨');
@@ -230,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         console.log('✅ 사용자 설정 저장 완료');
         
-        // 2. 설정 히스토리 저장 (addDoc 사용)
+        // 2. 설정 히스토리 저장
         console.log('📤 히스토리 저장 시작...');
         const now = new Date();
         const historyData = {
@@ -242,12 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
           prevPeriodStart: prevStart,
           cycleLength,
           menstrualLength,
-          timestamp: now.getTime() // 정렬용 타임스탬프 추가
+          timestamp: now.getTime()
         };
         
         console.log('📝 히스토리 데이터:', historyData);
         
-        // addDoc을 사용하여 자동 ID 생성
         const historyRef = collection(db, "settingsHistory");
         await addDoc(historyRef, historyData);
         console.log('✅ 히스토리 저장 완료');
@@ -259,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderPlanTable();
         if (goalWeightDisplay) goalWeightDisplay.textContent = goalWeight;
         
-        // 4. 히스토리 다시 로드 (약간의 지연 후)
+        // 4. 히스토리 다시 로드
         setTimeout(async () => {
           console.log('🔄 히스토리 다시 로드...');
           await loadSettingsHistory();
@@ -321,7 +322,6 @@ document.addEventListener('DOMContentLoaded', function() {
         renderPlanTable();
       }
       
-      // 설정 로드 후 히스토리도 로드
       await loadSettingsHistory();
       
     } catch (error) {
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // ✅ 설정 히스토리 불러오기 (단순화된 버전)
+  // ✅ 설정 히스토리 불러오기
   async function loadSettingsHistory() {
     const historyContainer = document.getElementById('settingsHistoryList');
     
@@ -347,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('📚 설정 히스토리 로드 시작...');
       console.log('👤 현재 사용자 UID:', currentUser.uid);
       
-      // 단순 쿼리로 모든 문서 가져오기
       const historyCollection = collection(db, "settingsHistory");
       const querySnapshot = await getDocs(historyCollection);
       
@@ -358,7 +357,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = docSnap.data();
         console.log('📄 문서:', docSnap.id, data);
         
-        // 현재 사용자의 문서만 필터링
         if (data.uid === currentUser.uid) {
           historyList.push({
             id: docSnap.id,
@@ -370,17 +368,14 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
       console.log('📋 히스토리 리스트:', historyList);
       
-      // 타임스탬프로 정렬 (최신순)
       historyList.sort((a, b) => {
         const timeA = a.timestamp || new Date(a.savedAt).getTime();
         const timeB = b.timestamp || new Date(b.savedAt).getTime();
         return timeB - timeA;
       });
       
-      // 최근 5개만 표시
       historyList = historyList.slice(0, 5);
       
-      // HTML 생성
       let html = '';
       if (historyList.length === 0) {
         html = '<div class="no-history">저장된 설정 기록이 없습니다. 설정을 저장해보세요!</div>';
@@ -490,7 +485,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('👤 사용자 섹션 표시');
       }
       
-      // 데이터 로드
       await loadSettings();
       await loadWeights();
       
@@ -512,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
         userInfo.textContent = '';
       }
       
-      // 히스토리 초기화
       await loadSettingsHistory();
     }
   });
@@ -599,17 +592,27 @@ function updateProgress() {
   const progressText = document.getElementById('progressText');
   if (progressFill) progressFill.style.width = percent + '%';
   if (progressText) progressText.textContent = percent + '%';
+  
+  // 현재 통계 탭이 활성화되어 있으면 차트 업데이트
+  const statsSection = document.getElementById('stats');
+  if (statsSection && statsSection.classList.contains('active')) {
+    console.log('📊 진행률 업데이트로 인한 차트 재그리기');
+    setTimeout(() => {
+      drawWorkoutChart();
+    }, 100);
+  }
 }
 
 // ✅ Chart.js 체중 차트
 function drawWeightChart() {
+  console.log('📊 체중 차트 그리기 시작...');
+  
   const ctx = document.getElementById('weightChart');
   if (!ctx) {
     console.log('❌ weightChart 요소를 찾을 수 없습니다');
     return;
   }
   
-  console.log('📊 체중 차트 그리기 시작...');
   console.log('📊 체중 데이터:', weightRecords);
   
   // 기존 차트 삭제
@@ -618,11 +621,54 @@ function drawWeightChart() {
   }
   
   if (weightRecords.length === 0) {
-    console.log('📊 체중 데이터가 없어서 차트를 그릴 수 없습니다');
-    ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+    console.log('📊 체중 데이터가 없어서 빈 차트를 그립니다');
+    
+    // 빈 차트 그리기
+    window.weightChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['데이터 없음'],
+        datasets: [{
+          label: '체중 (kg)',
+          data: [],
+          borderColor: '#27ae60',
+          backgroundColor: 'rgba(39, 174, 96, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: '체중 (kg)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '날짜'
+            }
+          }
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: '체중 변화 추이 (데이터를 추가해주세요)'
+          }
+        }
+      }
+    });
+    
+    console.log('✅ 빈 체중 차트 그리기 완료');
     return;
   }
   
+  // 실제 데이터로 차트 그리기
   window.weightChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
@@ -668,26 +714,70 @@ function drawWeightChart() {
 
 // ✅ 운동 완료율 차트
 function drawWorkoutChart() {
+  console.log('📊 운동 차트 그리기 시작...');
+  
   const ctx = document.getElementById('workoutChart');
   if (!ctx) {
     console.log('❌ workoutChart 요소를 찾을 수 없습니다');
     return;
   }
   
-  console.log('📊 운동 차트 그리기 시작...');
+  console.log('📊 플랜 데이터:', planData.length, '개');
   
   // 기존 차트 삭제
   if (window.workoutChartInstance) {
     window.workoutChartInstance.destroy();
   }
   
+  if (planData.length === 0) {
+    console.log('📊 플랜 데이터가 없어서 빈 차트를 그립니다');
+    
+    // 빈 차트 그리기
+    window.workoutChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['데이터 없음'],
+        datasets: [{
+          data: [1],
+          backgroundColor: ['#ecf0f1'],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+                        text: '운동 완료 현황 (플랜을 생성해주세요)'
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+    
+    console.log('✅ 빈 운동 차트 그리기 완료');
+    return;
+  }
+  
+  // 실제 데이터 계산
   const morningDone = planData.filter(p => p.morningDone).length;
   const eveningDone = planData.filter(p => p.eveningDone).length;
   const total = planData.length;
   const notDone = (total * 2) - morningDone - eveningDone;
   
-  console.log('📊 운동 데이터:', { morningDone, eveningDone, notDone, total });
+  console.log('📊 운동 데이터:', { 
+    morningDone, 
+    eveningDone, 
+    notDone, 
+    total,
+    totalExercises: total * 2
+  });
   
+  // 실제 데이터로 차트 그리기
   window.workoutChartInstance = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -709,10 +799,21 @@ function drawWorkoutChart() {
       plugins: {
         title: {
           display: true,
-          text: '운동 완료 현황'
+          text: `운동 완료 현황 (총 ${total * 2}회 중 ${morningDone + eveningDone}회 완료)`
         },
         legend: {
           position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = Math.round((value / total) * 100);
+              return `${label}: ${value}회 (${percentage}%)`;
+            }
+          }
         }
       }
     }
