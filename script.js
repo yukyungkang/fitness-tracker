@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ✅ Firebase 설정
 const firebaseConfig = {
@@ -61,15 +61,19 @@ function switchTab(tabName) {
   if (selectedTab) {
     selectedTab.classList.add('active');
     console.log('✅ 탭 활성화:', selectedTab);
-  } else {
-    console.error('❌ 탭을 찾을 수 없음:', tabName);
   }
   
   if (selectedSection) {
     selectedSection.classList.add('active');
     console.log('✅ 섹션 활성화:', selectedSection);
-  } else {
-    console.error('❌ 섹션을 찾을 수 없음:', tabName);
+    
+    // 통계 탭일 때 차트 그리기
+    if (tabName === 'stats') {
+      setTimeout(() => {
+        drawWeightChart();
+        drawWorkoutChart();
+      }, 100);
+    }
   }
 }
 
@@ -80,13 +84,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // ✅ 요소 존재 확인
   const loginBtn = document.getElementById('loginBtn');
   const userSection = document.getElementById('userSection');
-  const authSection = document.querySelector('.auth-section');
   const logoutBtn = document.getElementById('logoutBtn');
   const userInfo = document.getElementById('userInfo');
   
   console.log('로그인 버튼:', loginBtn);
   console.log('사용자 섹션:', userSection);
-  console.log('인증 섹션:', authSection);
   
   // ✅ 초기 상태 설정
   if (loginBtn) {
@@ -181,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (prevPeriodStartInput) prevPeriodStartInput.addEventListener('change', calcAvgCycle);
   if (periodStartInput) periodStartInput.addEventListener('change', calcAvgCycle);
 
-  // ✅ 설정 저장 (디버깅 강화)
+  // ✅ 설정 저장 (수정된 버전)
   if (saveSettingsBtn) {
     saveSettingsBtn.addEventListener('click', async () => {
       console.log('💾 설정 저장 버튼 클릭됨');
@@ -228,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         console.log('✅ 사용자 설정 저장 완료');
         
-        // 2. 설정 히스토리 저장
+        // 2. 설정 히스토리 저장 (addDoc 사용)
         console.log('📤 히스토리 저장 시작...');
         const now = new Date();
         const historyData = {
@@ -240,14 +242,14 @@ document.addEventListener('DOMContentLoaded', function() {
           prevPeriodStart: prevStart,
           cycleLength,
           menstrualLength,
+          timestamp: now.getTime() // 정렬용 타임스탬프 추가
         };
         
-        const historyId = `${currentUser.uid}_${now.getTime()}`;
-        console.log('📝 히스토리 ID:', historyId);
         console.log('📝 히스토리 데이터:', historyData);
         
-        const historyRef = doc(db, "settingsHistory", historyId);
-        await setDoc(historyRef, historyData);
+        // addDoc을 사용하여 자동 ID 생성
+        const historyRef = collection(db, "settingsHistory");
+        await addDoc(historyRef, historyData);
         console.log('✅ 히스토리 저장 완료');
         
         showToast("✅ 설정 저장 완료!");
@@ -257,9 +259,11 @@ document.addEventListener('DOMContentLoaded', function() {
         renderPlanTable();
         if (goalWeightDisplay) goalWeightDisplay.textContent = goalWeight;
         
-        // 4. 히스토리 다시 로드
-        console.log('🔄 히스토리 다시 로드...');
-        await loadSettingsHistory();
+        // 4. 히스토리 다시 로드 (약간의 지연 후)
+        setTimeout(async () => {
+          console.log('🔄 히스토리 다시 로드...');
+          await loadSettingsHistory();
+        }, 1000);
         
       } catch (error) {
         console.error("❌ 설정 저장 오류:", error);
@@ -270,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ✅ 체중 기록 추가
   if (addWeightBtn) {
-    addWeightBtn.addEventListener('click', () => {
+    addWeightBtn.addEventListener('click', async () => {
       const date = dateInput?.value;
       const weight = parseFloat(weightInput?.value);
       if (!date || !weight) return showToast("날짜와 체중 입력");
@@ -278,8 +282,9 @@ document.addEventListener('DOMContentLoaded', function() {
       weightRecords.push({ date, weight });
       weightRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
       renderWeight();
-      saveWeights();
+      await saveWeights();
       if (weightInput) weightInput.value = '';
+      showToast("✅ 체중 기록 추가됨");
     });
   }
 
@@ -326,11 +331,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // ✅ 설정 히스토리 불러오기 (디버깅 강화)
+  // ✅ 설정 히스토리 불러오기 (단순화된 버전)
   async function loadSettingsHistory() {
+    const historyContainer = document.getElementById('settingsHistoryList');
+    
     if (!currentUser) {
       console.log('❌ 로그인되지 않아 히스토리를 불러올 수 없습니다');
-      const historyContainer = document.getElementById('settingsHistoryList');
       if (historyContainer) {
         historyContainer.innerHTML = '<div class="no-login">로그인 후 설정 기록을 확인할 수 있습니다.</div>';
       }
@@ -341,17 +347,16 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('📚 설정 히스토리 로드 시작...');
       console.log('👤 현재 사용자 UID:', currentUser.uid);
       
+      // 단순 쿼리로 모든 문서 가져오기
       const historyCollection = collection(db, "settingsHistory");
-      console.log('📁 컬렉션 참조:', historyCollection);
+      const querySnapshot = await getDocs(historyCollection);
       
-      // 단순 쿼리로 변경 (인덱스 문제 방지)
-      const allDocs = await getDocs(historyCollection);
-      console.log(`📊 전체 문서 개수: ${allDocs.size}`);
+      console.log(`📊 전체 문서 개수: ${querySnapshot.size}`);
       
       let historyList = [];
-      allDocs.forEach(docSnap => {
+      querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
-        console.log('📄 문서 데이터:', data);
+        console.log('📄 문서:', docSnap.id, data);
         
         // 현재 사용자의 문서만 필터링
         if (data.uid === currentUser.uid) {
@@ -363,10 +368,14 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
-            console.log('📋 히스토리 리스트:', historyList);
+      console.log('📋 히스토리 리스트:', historyList);
       
-      // 날짜순 정렬 (최신순)
-      historyList.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+      // 타임스탬프로 정렬 (최신순)
+      historyList.sort((a, b) => {
+        const timeA = a.timestamp || new Date(a.savedAt).getTime();
+        const timeB = b.timestamp || new Date(b.savedAt).getTime();
+        return timeB - timeA;
+      });
       
       // 최근 5개만 표시
       historyList = historyList.slice(0, 5);
@@ -374,10 +383,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // HTML 생성
       let html = '';
       if (historyList.length === 0) {
-        html = '<div class="no-history">저장된 설정 기록이 없습니다.</div>';
+        html = '<div class="no-history">저장된 설정 기록이 없습니다. 설정을 저장해보세요!</div>';
         console.log('📝 히스토리가 없습니다');
       } else {
-        historyList.forEach(item => {
+        historyList.forEach((item, index) => {
           const date = item.savedAtKST || item.savedAt.slice(0, 10);
           const prevDate = item.prevPeriodStart || '미설정';
           const lastDate = item.periodStart || '미설정';
@@ -392,10 +401,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `;
         });
-        console.log('📝 히스토리 HTML 생성 완료');
+        console.log(`📝 히스토리 HTML 생성 완료 (${historyList.length}개)`);
       }
       
-      const historyContainer = document.getElementById('settingsHistoryList');
       if (historyContainer) {
         historyContainer.innerHTML = html;
         console.log('✅ 히스토리 HTML 업데이트 완료');
@@ -405,9 +413,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (error) {
       console.error("❌ 히스토리 불러오기 오류:", error);
-      const historyContainer = document.getElementById('settingsHistoryList');
       if (historyContainer) {
-        historyContainer.innerHTML = '<div class="error">히스토리를 불러오는 중 오류가 발생했습니다.</div>';
+        historyContainer.innerHTML = '<div class="error">히스토리를 불러오는 중 오류가 발생했습니다: ' + error.message + '</div>';
       }
     }
   }
@@ -417,7 +424,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!currentUser) return;
     try {
       const ref = doc(db, "weightData", currentUser.uid);
-      await setDoc(ref, { records: weightRecords });
+      await setDoc(ref, { 
+        records: weightRecords,
+        updatedAt: new Date().toISOString()
+      });
+      console.log('💾 체중 데이터 저장 완료');
     } catch (error) {
       console.error("체중 데이터 저장 오류:", error);
     }
@@ -432,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (snap.exists()) {
         weightRecords = snap.data().records || [];
         renderWeight();
+        console.log('📥 체중 데이터 로드 완료:', weightRecords.length, '개');
       }
     } catch (error) {
       console.error("체중 데이터 불러오기 오류:", error);
@@ -445,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     weightTable.innerHTML = '';
     weightRecords.forEach(r => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td>${r.date}</td><td>${r.weight}</td>`;
+      row.innerHTML = `<td>${r.date}</td><td>${r.weight}kg</td>`;
       weightTable.appendChild(row);
     });
     
@@ -453,7 +465,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const current = weightRecords[weightRecords.length - 1].weight;
       if (currentWeightDisplay) currentWeightDisplay.textContent = current;
       if (remainingWeightDisplay) remainingWeightDisplay.textContent = (current - goalWeight).toFixed(1);
-      drawWeightChart();
     }
   }
 
@@ -572,8 +583,8 @@ function renderPlanTable() {
     const checkboxes = row.querySelectorAll('input[type="checkbox"]');
     const am = checkboxes[0];
     const pm = checkboxes[1];
-    if (am) am.addEventListener('change', () => { p.morningDone = am.checked; updateProgress(); savePlanProgress(); });
-    if (pm) pm.addEventListener('change', () => { p.eveningDone = pm.checked; updateProgress(); savePlanProgress(); });
+    if (am) am.addEventListener('change', () => { p.morningDone = am.checked; updateProgress(); });
+    if (pm) pm.addEventListener('change', () => { p.eveningDone = pm.checked; updateProgress(); });
     tbody.appendChild(row);
   });
   updateProgress();
@@ -590,54 +601,26 @@ function updateProgress() {
   if (progressText) progressText.textContent = percent + '%';
 }
 
-// ✅ 플랜 진행률 저장
-async function savePlanProgress() {
-  if (!currentUser) return;
-  try {
-    const ref = doc(db, "planProgress", currentUser.uid);
-    await setDoc(ref, { 
-      planData: planData.map(p => ({
-        day: p.day,
-        morningDone: p.morningDone,
-        eveningDone: p.eveningDone
-      })),
-      updatedAt: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error("플랜 진행률 저장 오류:", error);
-  }
-}
-
-// ✅ 플랜 진행률 불러오기
-async function loadPlanProgress() {
-  if (!currentUser) return;
-  try {
-    const ref = doc(db, "planProgress", currentUser.uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      const savedProgress = snap.data().planData || [];
-      savedProgress.forEach(saved => {
-        const planItem = planData.find(p => p.day === saved.day);
-        if (planItem) {
-          planItem.morningDone = saved.morningDone;
-          planItem.eveningDone = saved.eveningDone;
-        }
-      });
-      renderPlanTable();
-    }
-  } catch (error) {
-    console.error("플랜 진행률 불러오기 오류:", error);
-  }
-}
-
 // ✅ Chart.js 체중 차트
 function drawWeightChart() {
   const ctx = document.getElementById('weightChart');
-  if (!ctx) return;
+  if (!ctx) {
+    console.log('❌ weightChart 요소를 찾을 수 없습니다');
+    return;
+  }
+  
+  console.log('📊 체중 차트 그리기 시작...');
+  console.log('📊 체중 데이터:', weightRecords);
   
   // 기존 차트 삭제
   if (window.weightChartInstance) {
     window.weightChartInstance.destroy();
+  }
+  
+  if (weightRecords.length === 0) {
+    console.log('📊 체중 데이터가 없어서 차트를 그릴 수 없습니다');
+    ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+    return;
   }
   
   window.weightChartInstance = new Chart(ctx, {
@@ -655,6 +638,7 @@ function drawWeightChart() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         y: {
           beginAtZero: false,
@@ -678,12 +662,19 @@ function drawWeightChart() {
       }
     }
   });
+  
+  console.log('✅ 체중 차트 그리기 완료');
 }
 
 // ✅ 운동 완료율 차트
 function drawWorkoutChart() {
   const ctx = document.getElementById('workoutChart');
-  if (!ctx) return;
+  if (!ctx) {
+    console.log('❌ workoutChart 요소를 찾을 수 없습니다');
+    return;
+  }
+  
+  console.log('📊 운동 차트 그리기 시작...');
   
   // 기존 차트 삭제
   if (window.workoutChartInstance) {
@@ -694,6 +685,8 @@ function drawWorkoutChart() {
   const eveningDone = planData.filter(p => p.eveningDone).length;
   const total = planData.length;
   const notDone = (total * 2) - morningDone - eveningDone;
+  
+  console.log('📊 운동 데이터:', { morningDone, eveningDone, notDone, total });
   
   window.workoutChartInstance = new Chart(ctx, {
     type: 'doughnut',
@@ -712,6 +705,7 @@ function drawWorkoutChart() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         title: {
           display: true,
@@ -723,14 +717,6 @@ function drawWorkoutChart() {
       }
     }
   });
+  
+  console.log('✅ 운동 차트 그리기 완료');
 }
-
-// ✅ 통계 탭 클릭 시 차트 업데이트
-document.addEventListener('click', function(e) {
-  if (e.target.dataset.tab === 'stats') {
-    setTimeout(() => {
-      drawWeightChart();
-      drawWorkoutChart();
-    }, 100);
-  }
-});
