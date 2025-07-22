@@ -1,48 +1,264 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3개월 다이어트 플랜</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="script.js" defer></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3개월 다이어트 플랜</title>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  font-family: 'Helvetica', sans-serif;
+  background: #fff;
+  color: #000;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background: #000;
+  color: #fff;
+  text-align: center;
+  padding: 15px;
+}
+header button {
+  margin: 10px;
+  padding: 10px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+header button:hover {
+  background: #ddd;
+}
+section {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+.weight-section input, .weight-section button {
+  padding: 10px;
+  margin: 5px;
+}
+.table-container {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+th {
+  background: #000;
+  color: #fff;
+}
+tr:nth-child(even) {
+  background: #f9f9f9;
+}
+canvas {
+  margin-top: 20px;
+  width: 100% !important;
+  height: 300px !important;
+}
+@media screen and (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+  }
+  th {
+    display: none;
+  }
+  td {
+    border: none;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+  }
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    color: #333;
+  }
+  .weight-section input, .weight-section button {
+    width: 100%;
+    margin-top: 10px;
+  }
+  canvas {
+    height: 200px !important;
+  }
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>3개월 다이어트 플랜</h1>
-    <div class="auth-buttons">
-      <button id="loginBtn">Google 로그인</button>
-      <button id="logoutBtn" style="display:none;">로그아웃</button>
-    </div>
-    <p id="userInfo"></p>
-  </header>
+<header>
+  <h1>3개월 다이어트 플랜</h1>
+  <div class="auth-buttons">
+    <button id="loginBtn">Google 로그인</button>
+    <button id="logoutBtn" style="display:none;">로그아웃</button>
+  </div>
+  <p id="userInfo"></p>
+</header>
 
-  <section class="weight-section">
-    <h2>체중 기록</h2>
-    <input type="date" id="dateInput">
-    <input type="number" id="weightInput" placeholder="체중 (kg)">
-    <button id="addWeightBtn">기록 추가</button>
-    <canvas id="weightChart"></canvas>
-  </section>
+<section class="weight-section">
+  <h2>체중 기록</h2>
+  <input type="date" id="dateInput" />
+  <input type="number" id="weightInput" placeholder="체중 (kg)" />
+  <button id="addWeightBtn">기록 추가</button>
+  <canvas id="weightChart"></canvas>
+</section>
 
-  <section class="plan-section">
-    <h2>플랜 일정 (84일)</h2>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>날짜(요일)</th>
-            <th>주기</th>
-            <th>아침 유산소</th>
-            <th>저녁 홈트</th>
-            <th>완료</th>
-          </tr>
-        </thead>
-        <tbody id="planTable"></tbody>
-      </table>
-    </div>
-  </section>
+<section class="plan-section">
+  <h2>플랜 일정 (84일)</h2>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>날짜(요일)</th>
+          <th>주기</th>
+          <th>아침 유산소</th>
+          <th>저녁 홈트</th>
+          <th>완료</th>
+        </tr>
+      </thead>
+      <tbody id="planTable"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Firebase SDK -->
+<script type="module">
+// ✅ Firebase SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ✅ Firebase 설정
+const firebaseConfig = {
+  apiKey: "AIzaSyBasJig37TExc76J3mlcJ9p5uZLXFrY5CQ",
+  authDomain: "dietpage-5f49a.firebaseapp.com",
+  projectId: "dietpage-5f49a",
+  storageBucket: "dietpage-5f49a.firebasestorage.app",
+  messagingSenderId: "666434272009",
+  appId: "1:666434272009:web:a491c168ac072658bdb1d8",
+  measurementId: "G-60RQ5NPWF5"
+};
+
+// ✅ Firebase Init
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// ✅ DOM 요소
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const userInfo = document.getElementById('userInfo');
+const planTable = document.getElementById('planTable');
+
+// ✅ 로그인
+loginBtn.addEventListener('click', async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    userInfo.textContent = `로그인: ${user.displayName}`;
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline';
+    loadPlan(user.uid);
+    loadWeights(user.uid);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+// ✅ 로그아웃
+logoutBtn.addEventListener('click', async () => {
+  await signOut(auth);
+  userInfo.textContent = '';
+  loginBtn.style.display = 'inline';
+  logoutBtn.style.display = 'none';
+  planTable.innerHTML = '';
+  weightChart.data.labels = [];
+  weightChart.data.datasets[0].data = [];
+  weightChart.update();
+});
+
+// ✅ 84일 플랜 데이터 (샘플)
+const planData = [
+  { day: 1, date: "7/22 (월)", cycle: "여포기", morning: "경사 6%, 4.5km/h, 30분", evening: "IMPT 루틴", link: "https://www.youtube.com/watch?v=wmSz8C44ldo" },
+  { day: 2, date: "7/23 (화)", cycle: "여포기", morning: "경사 6%, 4.5km/h, 30분", evening: "IMPT 루틴", link: "https://www.youtube.com/watch?v=wmSz8C44ldo" }
+  // TODO: 나머지 84일 데이터 추가 가능
+];
+
+// ✅ 테이블 렌더링
+async function loadPlan(uid) {
+  planTable.innerHTML = '';
+  planData.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.day}</td>
+      <td>${item.date}</td>
+      <td>${item.cycle}</td>
+      <td>${item.morning}</td>
+      <td><a href="${item.link}" target="_blank">${item.evening}</a></td>
+      <td><input type="checkbox" class="done" data-day="${item.day}"></td>
+    `;
+    planTable.appendChild(row);
+  });
+}
+
+// ✅ Chart.js 초기화
+const ctx = document.getElementById('weightChart').getContext('2d');
+const weightChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: '체중 (kg)',
+      data: [],
+      borderColor: '#000',
+      backgroundColor: '#333'
+    }]
+  },
+  options: { responsive: true }
+});
+
+// ✅ 체중 기록 Firestore 저장
+document.getElementById('addWeightBtn').addEventListener('click', async () => {
+  const date = document.getElementById('dateInput').value;
+  const weight = parseFloat(document.getElementById('weightInput').value);
+  if (!date || isNaN(weight)) return;
+
+  const user = auth.currentUser;
+  if (!user) return alert("로그인 먼저 하세요!");
+
+  const docRef = doc(db, "weights", user.uid);
+  const docSnap = await getDoc(docRef);
+  let weightData = docSnap.exists() ? docSnap.data().records : [];
+  weightData.push({ date, weight });
+
+  await setDoc(docRef, { records: weightData });
+  updateChart(weightData);
+});
+
+async function loadWeights(uid) {
+  const docRef = doc(db, "weights", uid);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    updateChart(docSnap.data().records);
+  }
+}
+
+function updateChart(weightData) {
+  weightChart.data.labels = weightData.map(d => d.date);
+  weightChart.data.datasets[0].data = weightData.map(d => d.weight);
+  weightChart.update();
+}
+</script>
 </body>
 </html>
