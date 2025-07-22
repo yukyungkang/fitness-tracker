@@ -69,11 +69,12 @@ function switchTab(tabName) {
     
     // 통계 탭일 때 차트 그리기
     if (tabName === 'stats') {
-      console.log('📊 통계 탭 활성화 - 차트 그리기 시작');
+      console.log('📊 통계 탭 감지됨! 차트 그리기 시작');
       setTimeout(() => {
+        console.log('📊 차트 함수 호출 시작');
         drawWeightChart();
         drawWorkoutChart();
-      }, 200);
+      }, 300);
     }
   }
 }
@@ -365,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       
-      console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
+            console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
       console.log('📋 히스토리 리스트:', historyList);
       
       historyList.sort((a, b) => {
@@ -596,7 +597,7 @@ function updateProgress() {
   // 현재 통계 탭이 활성화되어 있으면 차트 업데이트
   const statsSection = document.getElementById('stats');
   if (statsSection && statsSection.classList.contains('active')) {
-    console.log('📊 진행률 업데이트로 인한 차트 재그리기');
+    console.log('📊 체크박스 변경으로 인한 차트 업데이트');
     setTimeout(() => {
       drawWorkoutChart();
     }, 100);
@@ -605,219 +606,229 @@ function updateProgress() {
 
 // ✅ Chart.js 체중 차트
 function drawWeightChart() {
-  console.log('📊 체중 차트 그리기 시작...');
+  console.log('📊 체중 차트 그리기 함수 시작...');
   
   const ctx = document.getElementById('weightChart');
+  console.log('📊 weightChart 요소:', ctx);
+  
   if (!ctx) {
-    console.log('❌ weightChart 요소를 찾을 수 없습니다');
+    console.error('❌ weightChart 요소를 찾을 수 없습니다');
     return;
   }
   
+  console.log('📊 체중 데이터 개수:', weightRecords.length);
   console.log('📊 체중 데이터:', weightRecords);
   
   // 기존 차트 삭제
   if (window.weightChartInstance) {
+    console.log('📊 기존 체중 차트 삭제');
     window.weightChartInstance.destroy();
   }
   
-  if (weightRecords.length === 0) {
-    console.log('📊 체중 데이터가 없어서 빈 차트를 그립니다');
-    
-    // 빈 차트 그리기
-    window.weightChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ['데이터 없음'],
-        datasets: [{
-          label: '체중 (kg)',
-          data: [],
-          borderColor: '#27ae60',
-          backgroundColor: 'rgba(39, 174, 96, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: false,
-            title: {
-              display: true,
-              text: '체중 (kg)'
+  try {
+    if (weightRecords.length === 0) {
+      console.log('📊 체중 데이터가 없어서 빈 차트를 그립니다');
+      
+      window.weightChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['데이터가 없습니다'],
+          datasets: [{
+            label: '체중 (kg)',
+            data: [60], // 기본값
+            borderColor: '#27ae60',
+            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 50,
+              max: 80,
+              title: {
+                display: true,
+                text: '체중 (kg)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: '날짜'
+              }
             }
           },
-          x: {
+          plugins: {
             title: {
               display: true,
-              text: '날짜'
+              text: '체중 변화 추이 (체중 기록 탭에서 데이터를 추가해주세요)'
             }
           }
+        }
+      });
+    } else {
+      console.log('📊 실제 체중 데이터로 차트 그리기');
+      
+      window.weightChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: weightRecords.map(r => r.date),
+          datasets: [{
+            label: '체중 (kg)',
+            data: weightRecords.map(r => r.weight),
+            borderColor: '#27ae60',
+            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
         },
-        plugins: {
-          title: {
-            display: true,
-            text: '체중 변화 추이 (데이터를 추가해주세요)'
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: '체중 (kg)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: '날짜'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: '체중 변화 추이'
+            }
           }
         }
-      }
-    });
-    
-    console.log('✅ 빈 체중 차트 그리기 완료');
-    return;
-  }
-  
-  // 실제 데이터로 차트 그리기
-  window.weightChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: weightRecords.map(r => r.date),
-      datasets: [{
-        label: '체중 (kg)',
-        data: weightRecords.map(r => r.weight),
-        borderColor: '#27ae60',
-        backgroundColor: 'rgba(39, 174, 96, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: false,
-          title: {
-            display: true,
-            text: '체중 (kg)'
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: '날짜'
-          }
-        }
-      },
-      plugins: {
-        title: {
-          display: true,
-          text: '체중 변화 추이'
-        }
-      }
+      });
     }
-  });
-  
-  console.log('✅ 체중 차트 그리기 완료');
+    
+    console.log('✅ 체중 차트 그리기 성공');
+  } catch (error) {
+    console.error('❌ 체중 차트 그리기 실패:', error);
+  }
 }
 
 // ✅ 운동 완료율 차트
 function drawWorkoutChart() {
-  console.log('📊 운동 차트 그리기 시작...');
+  console.log('📊 운동 차트 그리기 함수 시작...');
   
   const ctx = document.getElementById('workoutChart');
+  console.log('📊 workoutChart 요소:', ctx);
+  
   if (!ctx) {
-    console.log('❌ workoutChart 요소를 찾을 수 없습니다');
+    console.error('❌ workoutChart 요소를 찾을 수 없습니다');
     return;
   }
   
-  console.log('📊 플랜 데이터:', planData.length, '개');
+  console.log('📊 플랜 데이터 개수:', planData.length);
   
   // 기존 차트 삭제
   if (window.workoutChartInstance) {
+    console.log('📊 기존 운동 차트 삭제');
     window.workoutChartInstance.destroy();
   }
   
-  if (planData.length === 0) {
-    console.log('📊 플랜 데이터가 없어서 빈 차트를 그립니다');
-    
-    // 빈 차트 그리기
-    window.workoutChartInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['데이터 없음'],
-        datasets: [{
-          data: [1],
-          backgroundColor: ['#ecf0f1'],
-          borderWidth: 2,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          title: {
-            display: true,
-                        text: '운동 완료 현황 (플랜을 생성해주세요)'
-          },
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    });
-    
-    console.log('✅ 빈 운동 차트 그리기 완료');
-    return;
-  }
-  
-  // 실제 데이터 계산
-  const morningDone = planData.filter(p => p.morningDone).length;
-  const eveningDone = planData.filter(p => p.eveningDone).length;
-  const total = planData.length;
-  const notDone = (total * 2) - morningDone - eveningDone;
-  
-  console.log('📊 운동 데이터:', { 
-    morningDone, 
-    eveningDone, 
-    notDone, 
-    total,
-    totalExercises: total * 2
-  });
-  
-  // 실제 데이터로 차트 그리기
-  window.workoutChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['아침 운동 완료', '저녁 운동 완료', '미완료'],
-      datasets: [{
-        data: [morningDone, eveningDone, notDone],
-        backgroundColor: [
-          '#3498db',
-          '#e74c3c', 
-          '#ecf0f1'
-        ],
-        borderWidth: 2,
-        borderColor: '#fff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: `운동 완료 현황 (총 ${total * 2}회 중 ${morningDone + eveningDone}회 완료)`
+  try {
+    if (planData.length === 0) {
+      console.log('📊 플랜 데이터가 없어서 빈 차트를 그립니다');
+      
+      window.workoutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['플랜이 없습니다'],
+          datasets: [{
+            data: [100],
+            backgroundColor: ['#ecf0f1'],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
         },
-        legend: {
-          position: 'bottom'
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const label = context.label || '';
-              const value = context.parsed || 0;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = Math.round((value / total) * 100);
-              return `${label}: ${value}회 (${percentage}%)`;
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '운동 완료 현황 (설정에서 플랜을 생성해주세요)'
+            },
+            legend: {
+              position: 'bottom'
             }
           }
         }
-      }
+      });
+    } else {
+      // 실제 데이터 계산
+      const morningDone = planData.filter(p => p.morningDone).length;
+      const eveningDone = planData.filter(p => p.eveningDone).length;
+      const total = planData.length;
+      const notDone = (total * 2) - morningDone - eveningDone;
+      
+      console.log('📊 운동 통계 계산:', {
+        총플랜: total,
+        아침완료: morningDone,
+        저녁완료: eveningDone,
+        미완료: notDone,
+        총운동횟수: total * 2,
+        완료횟수: morningDone + eveningDone
+      });
+      
+      window.workoutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['아침 운동 완료', '저녁 운동 완료', '미완료'],
+          datasets: [{
+            data: [morningDone, eveningDone, notDone],
+            backgroundColor: [
+              '#3498db',  // 파란색 - 아침 운동
+              '#e74c3c',  // 빨간색 - 저녁 운동
+              '#ecf0f1'   // 회색 - 미완료
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: `운동 완료 현황 (총 ${total * 2}회 중 ${morningDone + eveningDone}회 완료)`
+            },
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const totalValue = morningDone + eveningDone + notDone;
+                  const percentage = Math.round((value / totalValue) * 100);
+                  return `${label}: ${value}회 (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
     }
-  });
-  
-  console.log('✅ 운동 차트 그리기 완료');
+    
+    console.log('✅ 운동 차트 그리기 성공');
+  } catch (error) {
+    console.error('❌ 운동 차트 그리기 실패:', error);
+  }
 }
