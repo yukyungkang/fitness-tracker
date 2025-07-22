@@ -1,9 +1,9 @@
-// Firebase SDK
+// ✅ Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
+// ✅ Firebase 설정
 const firebaseConfig = {
   apiKey: "AIzaSyBasJig37TExc76J3mlcJ9p5uZLXFrY5CQ",
   authDomain: "dietpage-5f49a.firebaseapp.com",
@@ -13,13 +13,12 @@ const firebaseConfig = {
   appId: "1:666434272009:web:a491c168ac072658bdb1d8",
   measurementId: "G-60RQ5NPWF5"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// DOM
+// ✅ DOM
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const userInfo = document.getElementById('userInfo');
@@ -28,7 +27,7 @@ const weightList = document.getElementById('weightList');
 const weightTable = document.getElementById('weightTable');
 let currentUser = null;
 
-// Tabs
+// ✅ Tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -38,7 +37,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// 로그인
+// ✅ Google 로그인
 loginBtn.onclick = async () => {
   try {
     const res = await signInWithPopup(auth, provider);
@@ -50,7 +49,6 @@ loginBtn.onclick = async () => {
     loadWeights();
   } catch (e) { console.error(e); }
 };
-
 logoutBtn.onclick = async () => {
   await signOut(auth);
   currentUser = null;
@@ -60,55 +58,63 @@ logoutBtn.onclick = async () => {
   planTable.innerHTML = '';
   weightList.innerHTML = '';
   weightTable.innerHTML = '';
-  chart.data.labels = [];
-  chart.data.datasets[0].data = [];
-  chart.update();
+  weightChart.data.labels = [];
+  weightChart.data.datasets[0].data = [];
+  workoutChart.data.datasets.forEach(d => d.data = [0, 0]);
+  weightChart.update();
+  workoutChart.update();
 };
 
-// ✅ 84일 플랜 생성
+// ✅ 90일 플랜 생성
 const planData = [];
-const startDate = new Date("2024-07-22");
-for (let i = 0; i < 84; i++) {
+const startDate = new Date(); // ✅ 오늘 날짜 기준
+for (let i = 0; i < 90; i++) {
   const d = new Date(startDate);
   d.setDate(d.getDate() + i);
   const dateStr = `${d.getMonth() + 1}/${d.getDate()} (${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]})`;
   planData.push({
     day: i + 1,
     date: dateStr,
-    cycle: "다이어트",
     morning: "경사6%, 속도4.5, 30분",
     evening: "IMPT 루틴",
     link: "https://www.youtube.com/watch?v=wmSz8C44ldo"
   });
 }
 
-// ✅ 플랜 렌더링
+// ✅ 플랜 로드
 async function loadPlan() {
   planTable.innerHTML = '';
   const userDoc = doc(db, "plans", currentUser.uid);
   const snap = await getDoc(userDoc);
-  let doneData = snap.exists() ? snap.data().done : [];
+  let doneData = snap.exists() ? snap.data() : { morning: [], evening: [] };
+
   planData.forEach(item => {
-    const checked = doneData.includes(item.day) ? "checked" : "";
     const tr = document.createElement('tr');
+    const morningChecked = doneData.morning.includes(item.day) ? "checked" : "";
+    const eveningChecked = doneData.evening.includes(item.day) ? "checked" : "";
     tr.innerHTML = `
       <td>${item.day}</td>
       <td>${item.date}</td>
-      <td>${item.cycle}</td>
       <td>${item.morning}</td>
       <td><a href="${item.link}" target="_blank">${item.evening}</a></td>
-      <td><input type="checkbox" ${checked} data-day="${item.day}"></td>`;
+      <td><input type="checkbox" class="morning" data-day="${item.day}" ${morningChecked}></td>
+      <td><input type="checkbox" class="evening" data-day="${item.day}" ${eveningChecked}></td>`;
     planTable.appendChild(tr);
   });
+
   planTable.querySelectorAll('input[type=checkbox]').forEach(cb => {
     cb.addEventListener('change', async () => {
-      const checkedDays = [...planTable.querySelectorAll('input:checked')].map(c => parseInt(c.dataset.day));
-      await setDoc(userDoc, { done: checkedDays });
+      const morningDone = [...planTable.querySelectorAll('input.morning:checked')].map(c => parseInt(c.dataset.day));
+      const eveningDone = [...planTable.querySelectorAll('input.evening:checked')].map(c => parseInt(c.dataset.day));
+      await setDoc(userDoc, { morning: morningDone, evening: eveningDone });
+      updateWorkoutChart(morningDone.length, eveningDone.length);
     });
   });
+
+  updateWorkoutChart(doneData.morning.length, doneData.evening.length);
 }
 
-// ✅ 체중 기록 기능
+// ✅ 체중 기록
 document.getElementById('addWeightBtn').onclick = async () => {
   const date = document.getElementById('dateInput').value;
   const weight = parseFloat(document.getElementById('weightInput').value);
@@ -131,15 +137,28 @@ function renderWeights(data) {
   data.sort((a, b) => new Date(a.date) - new Date(b.date));
   weightList.innerHTML = data.map(d => `<div class="list-item">${d.date} - ${d.weight}kg</div>`).join('');
   weightTable.innerHTML = data.map(d => `<tr><td>${d.date}</td><td>${d.weight}</td></tr>`).join('');
-  chart.data.labels = data.map(d => d.date);
-  chart.data.datasets[0].data = data.map(d => d.weight);
-  chart.update();
+  weightChart.data.labels = data.map(d => d.date);
+  weightChart.data.datasets[0].data = data.map(d => d.weight);
+  weightChart.update();
 }
 
 // ✅ Chart.js
-const ctx = document.getElementById('weightChart').getContext('2d');
-const chart = new Chart(ctx, {
+const weightCtx = document.getElementById('weightChart').getContext('2d');
+const workoutCtx = document.getElementById('workoutChart').getContext('2d');
+const weightChart = new Chart(weightCtx, {
   type: 'line',
   data: { labels: [], datasets: [{ label: '체중 (kg)', data: [], borderColor: '#000' }] },
   options: { responsive: true }
 });
+const workoutChart = new Chart(workoutCtx, {
+  type: 'bar',
+  data: {
+    labels: ['아침 완료', '저녁 완료'],
+    datasets: [{ data: [0, 0], backgroundColor: ['#333', '#999'] }]
+  },
+  options: { responsive: true }
+});
+function updateWorkoutChart(morningCount, eveningCount) {
+  workoutChart.data.datasets[0].data = [morningCount, eveningCount];
+  workoutChart.update();
+}
