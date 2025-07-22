@@ -27,7 +27,7 @@
   <button class="tab-btn" data-tab="settings">설정</button>
 </nav>
 
-<!-- Toast Notification -->
+<!-- Toast -->
 <div id="toastContainer"></div>
 
 <!-- 가이드 -->
@@ -35,24 +35,16 @@
   <h2>주기 기반 다이어트 가이드</h2>
   <div class="card-container">
     <div class="card red">
-      <h3>월경기 (1~5일)</h3>
-      <p>저강도</p>
-      <ul><li>가벼운 걷기</li><li>스트레칭</li><li>요가</li></ul>
+      <h3>월경기</h3><p>저강도</p><ul><li>스트레칭</li><li>가벼운 걷기</li></ul>
     </div>
     <div class="card green">
-      <h3>여포기 (6~13일)</h3>
-      <p>중강도</p>
-      <ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
+      <h3>여포기</h3><p>중강도</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
     </div>
     <div class="card yellow">
-      <h3>배란기 (14~15일)</h3>
-      <p>고강도</p>
-      <ul><li>빠른 속도 걷기</li><li>IMPT + 코어 루틴</li></ul>
+      <h3>배란기</h3><p>고강도</p><ul><li>빠른 걷기</li><li>IMPT + 코어</li></ul>
     </div>
     <div class="card purple">
-      <h3>황체기 (16~28일)</h3>
-      <p>중강도 유지</p>
-      <ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
+      <h3>황체기</h3><p>중강도 유지</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul>
     </div>
   </div>
 </section>
@@ -66,9 +58,7 @@
   </div>
   <table>
     <thead>
-      <tr>
-        <th>Day</th><th>날짜</th><th>주기</th><th>아침 유산소</th><th>저녁 홈트</th><th>아침 완료</th><th>저녁 완료</th>
-      </tr>
+      <tr><th>Day</th><th>날짜</th><th>주기</th><th>아침 유산소</th><th>저녁 홈트</th><th>아침 완료</th><th>저녁 완료</th></tr>
     </thead>
     <tbody id="planTable"></tbody>
   </table>
@@ -113,6 +103,9 @@
   <label>목표 체중 (kg):</label>
   <input type="number" id="goalWeight" value="60"><br><br>
   <button id="saveSettingsBtn">저장</button>
+
+  <h3>이전 설정 기록</h3>
+  <div id="settingsHistoryList"></div>
 </section>
 
 </body>
