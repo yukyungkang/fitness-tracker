@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3개월 다이어트 플랜</title>
-<link rel="stylesheet" href="style.css" />
+<title>90일 다이어트 플랜</title>
+<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="script.js" defer></script>
 </head>
 <body>
 
 <header>
-  <h1>3개월 다이어트 관리</h1>
+  <h1>90일 다이어트 관리</h1>
   <div>
     <button id="loginBtn">Google 로그인</button>
     <button id="logoutBtn" style="display:none;">로그아웃</button>
@@ -27,11 +27,11 @@
 
 <!-- 플랜 -->
 <section id="plan" class="active">
-  <h2>84일 다이어트 플랜</h2>
+  <h2>90일 다이어트 플랜</h2>
   <table>
     <thead>
       <tr>
-        <th>Day</th><th>날짜</th><th>주기</th><th>아침 유산소</th><th>저녁 홈트</th><th>완료</th>
+        <th>Day</th><th>날짜</th><th>아침 유산소</th><th>저녁 홈트</th><th>아침 완료</th><th>저녁 완료</th>
       </tr>
     </thead>
     <tbody id="planTable"></tbody>
@@ -53,8 +53,10 @@
 
 <!-- 통계 -->
 <section id="stats">
-  <h2>체중 변화 그래프</h2>
+  <h2>체중 & 운동 통계</h2>
   <canvas id="weightChart"></canvas>
+  <h3>운동 완료율</h3>
+  <canvas id="workoutChart"></canvas>
 </section>
 
 </body>
