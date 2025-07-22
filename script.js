@@ -18,7 +18,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ 전역 변수들을 window 객체에 추가하여 콘솔에서도 접근 가능하게
+// ✅ 전역 변수들
 window.currentUser = null;
 window.planData = [];
 window.goalWeight = 60;
@@ -38,12 +38,10 @@ function showToast(msg) {
     console.error('Toast 컨테이너를 찾을 수 없습니다');
     return;
   }
-  
   const div = document.createElement('div');
   div.className = 'toast';
   div.textContent = msg;
   toastContainer.appendChild(div);
-  
   setTimeout(() => div.classList.add('show'), 100);
   setTimeout(() => {
     div.classList.remove('show');
@@ -62,22 +60,23 @@ function calculateBMI(height, weight) {
 function switchTab(tabName) {
   console.log('탭 전환:', tabName);
   
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // 모든 탭 버튼에서 active 클래스 제거
+  document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(btn => {
     btn.classList.remove('active');
   });
   
+  // 모든 섹션 숨기기
   document.querySelectorAll('section').forEach(section => {
     section.classList.remove('active');
   });
   
-  const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
+  // 선택된 탭 버튼들 활성화
+  document.querySelectorAll(`[data-tab="${tabName}"]`).forEach(btn => {
+    btn.classList.add('active');
+  });
+  
+  // 선택된 섹션 표시
   const selectedSection = document.getElementById(tabName);
-  
-  if (selectedTab) {
-    selectedTab.classList.add('active');
-    console.log('✅ 탭 활성화:', selectedTab);
-  }
-  
   if (selectedSection) {
     selectedSection.classList.add('active');
     console.log('✅ 섹션 활성화:', selectedSection);
@@ -92,17 +91,14 @@ function switchTab(tabName) {
   }
 }
 
-// ✅ 신체 정보 저장 함수 (전역 함수로 분리)
+// ✅ 신체 정보 저장 함수
 window.saveBodyData = async function() {
   console.log('📊 신체 정보 저장 함수 호출됨');
-  console.log('👤 현재 사용자 상태:', currentUser);
   
   if (!currentUser) {
     console.log('❌ 로그인되지 않음');
     return showToast("로그인이 필요합니다.");
   }
-  
-  console.log('👤 현재 사용자:', currentUser.displayName);
   
   // DOM 요소들 직접 참조
   const measureDateInput = document.getElementById('measureDate');
@@ -115,14 +111,6 @@ window.saveBodyData = async function() {
   const bmrInputField = document.getElementById('bmrInput');
   const bodyMemoField = document.getElementById('bodyMemo');
   
-  console.log('📝 DOM 요소 확인:', {
-    measureDate: measureDateInput?.value,
-    measureTime: measureTimeSelect?.value,
-    weight: weightInputField?.value,
-    bodyFat: bodyFatInputField?.value,
-    muscle: muscleMassInputField?.value
-  });
-  
   const date = measureDateInput?.value;
   const time = measureTimeSelect?.value || 'morning';
   const weight = parseFloat(weightInputField?.value);
@@ -133,23 +121,16 @@ window.saveBodyData = async function() {
   const bmr = parseFloat(bmrInputField?.value);
   const memo = bodyMemoField?.value || '';
   
-  console.log('📝 입력된 데이터:', {
-    date, time, weight, bodyFat, muscleMass, visceralFat, waterPercent, bmr, memo, userHeight
-  });
-  
   if (!date) {
-    console.log('❌ 날짜 없음');
     return showToast("측정 날짜를 선택해주세요.");
   }
   
   if (!weight || isNaN(weight)) {
-    console.log('❌ 체중 값 없음 또는 잘못됨');
     return showToast("체중을 올바르게 입력해주세요.");
   }
   
   try {
     showToast("📊 신체 정보 저장 중...");
-    console.log('💾 저장 시작...');
     
     const bodyData = {
       uid: currentUser.uid,
@@ -168,17 +149,12 @@ window.saveBodyData = async function() {
       timestamp: new Date().getTime()
     };
     
-    console.log('📄 저장할 데이터:', bodyData);
-    
     const bodyRef = collection(db, "bodyRecords");
-    console.log('📁 컬렉션 참조:', bodyRef);
-    
     const docRef = await addDoc(bodyRef, bodyData);
-    console.log('✅ 문서 저장 완료, ID:', docRef.id);
     
     showToast("✅ 신체 정보 저장 완료!");
     
-    // 입력 폼 초기화
+        // 입력 폼 초기화
     if (weightInputField) weightInputField.value = '';
     if (bodyFatInputField) bodyFatInputField.value = '';
     if (muscleMassInputField) muscleMassInputField.value = '';
@@ -187,16 +163,11 @@ window.saveBodyData = async function() {
     if (bmrInputField) bmrInputField.value = '';
     if (bodyMemoField) bodyMemoField.value = '';
     
-    console.log('🔄 데이터 다시 로드 시작...');
-    
     // 데이터 다시 로드
     await loadBodyRecords();
     
-    console.log('🎉 저장 완료!');
-    
   } catch (error) {
     console.error("❌ 신체 정보 저장 오류:", error);
-    console.error("오류 상세:", error.code, error.message);
     showToast("❌ 신체 정보 저장 실패: " + error.message);
   }
 };
@@ -205,42 +176,65 @@ window.saveBodyData = async function() {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM 로드 완료');
   
-  // ✅ 요소 존재 확인
+  // 요소 존재 확인
   const loginBtn = document.getElementById('loginBtn');
   const userSection = document.getElementById('userSection');
   const logoutBtn = document.getElementById('logoutBtn');
   const userInfo = document.getElementById('userInfo');
   
-  console.log('로그인 버튼:', loginBtn);
-  console.log('사용자 섹션:', userSection);
-  
-  // ✅ 초기 상태 설정
+  // 초기 상태 설정
   if (loginBtn) {
     loginBtn.style.display = 'block';
-    console.log('로그인 버튼 강제 표시');
   }
-  
   if (userSection) {
     userSection.style.display = 'none';
-    console.log('사용자 섹션 강제 숨김');
   }
   
-  // ✅ 탭 메뉴 이벤트
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  console.log('탭 버튼 개수:', tabButtons.length);
+  // ✅ 네비게이션 이벤트 통합 처리
+  const desktopNavItems = document.querySelectorAll('.nav-item');
+  const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
   
-  tabButtons.forEach((btn, index) => {
-    console.log(`탭 ${index}:`, btn.dataset.tab);
+  // 공통 탭 전환 함수
+  function handleTabSwitch(tabName) {
+    // 모든 네비게이션 아이템에서 active 클래스 제거
+    [...desktopNavItems, ...mobileNavItems].forEach(item => {
+      item.classList.remove('active');
+    });
     
-    btn.addEventListener('click', function(e) {
+    // 해당 탭 활성화
+    document.querySelectorAll(`[data-tab="${tabName}"]`).forEach(item => {
+      item.classList.add('active');
+    });
+    
+    // 섹션 전환
+    switchTab(tabName);
+  }
+  
+  // PC 네비게이션 이벤트
+  desktopNavItems.forEach(item => {
+    item.addEventListener('click', function(e) {
       e.preventDefault();
-      e.stopPropagation();
-      console.log('클릭된 탭:', this.dataset.tab);
-      switchTab(this.dataset.tab);
+      const tabName = this.dataset.tab;
+      handleTabSwitch(tabName);
     });
   });
-
-  // ✅ DOM 요소 참조
+  
+  // 모바일 네비게이션 이벤트
+  mobileNavItems.forEach(item => {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // 햅틱 피드백 (지원하는 경우)
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      
+      const tabName = this.dataset.tab;
+      handleTabSwitch(tabName);
+    });
+  });
+  
+  // DOM 요소 참조
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
   const addBodyDataBtn = document.getElementById('addBodyDataBtn');
   const measureDate = document.getElementById('measureDate');
@@ -251,24 +245,23 @@ document.addEventListener('DOMContentLoaded', function() {
   const goalWeightInput = document.getElementById('goalWeight');
   const userHeightInput = document.getElementById('userHeight');
   const avgCycleDisplay = document.getElementById('avgCycleDisplay');
-
-  // ✅ 오늘 날짜 기본값 설정
+  
+  // 오늘 날짜 기본값 설정
   if (measureDate) {
     measureDate.value = new Date().toISOString().split('T')[0];
   }
-
+  
   // ✅ 로그인 이벤트
   if (loginBtn) {
     loginBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       console.log('🔐 로그인 버튼 클릭됨');
-      
       try {
         showToast("🔄 로그인 시도 중...");
         await setPersistence(auth, browserLocalPersistence);
         const res = await signInWithPopup(auth, provider);
         currentUser = res.user;
-        window.currentUser = res.user; // 전역 변수에도 할당
+        window.currentUser = res.user;
         console.log('✅ 로그인 성공:', currentUser.displayName);
         showToast("✅ 로그인 성공!");
       } catch (error) {
@@ -277,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
+  
   // ✅ 로그아웃 이벤트
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
@@ -290,24 +283,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
-  // ✅ 신체 정보 저장 버튼 이벤트 (수정된 방식)
+  
+  // ✅ 신체 정보 저장 버튼 이벤트
   if (addBodyDataBtn) {
-    console.log('✅ 신체 정보 저장 버튼 찾음');
     addBodyDataBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       console.log('📊 신체 정보 저장 버튼 클릭 이벤트 발생');
       await window.saveBodyData();
     });
-    console.log('✅ 신체 정보 저장 버튼 이벤트 리스너 등록 완료');
-  } else {
-    console.error('❌ addBodyDataBtn을 찾을 수 없습니다');
   }
-
+  
   // ✅ 평균 주기 자동 계산
   function calcAvgCycle() {
     if (!prevPeriodStartInput || !periodStartInput) return;
-    
     const prev = new Date(prevPeriodStartInput.value);
     const last = new Date(periodStartInput.value);
     if (!isNaN(prev) && !isNaN(last)) {
@@ -318,21 +306,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
-
+  
   if (prevPeriodStartInput) prevPeriodStartInput.addEventListener('change', calcAvgCycle);
   if (periodStartInput) periodStartInput.addEventListener('change', calcAvgCycle);
-
+  
   // ✅ 설정 저장
   if (saveSettingsBtn) {
     saveSettingsBtn.addEventListener('click', async () => {
       console.log('💾 설정 저장 버튼 클릭됨');
-      
       if (!currentUser) {
-        console.log('❌ 사용자 로그인 안됨');
         return showToast("로그인이 필요합니다.");
       }
-      
-      console.log('👤 현재 사용자:', currentUser.displayName);
       
       const start = periodStartInput?.value;
       const prevStart = prevPeriodStartInput?.value;
@@ -341,17 +325,11 @@ document.addEventListener('DOMContentLoaded', function() {
       goalWeight = parseFloat(goalWeightInput?.value || 60);
       userHeight = parseFloat(userHeightInput?.value || 165);
       
-      // 전역 변수에도 업데이트
       window.goalWeight = goalWeight;
       window.userHeight = userHeight;
       
-      console.log('📝 입력 데이터:', {
-        start, prevStart, cycleLength, menstrualLength, goalWeight, userHeight
-      });
-      
       if (!start || !cycleLength || !menstrualLength) {
-        console.log('❌ 필수 항목 누락');
-        return showToast("모든 항목 입력!");
+        return showToast("모든 항목을 입력해주세요!");
       }
       
       try {
@@ -367,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
           userHeight,
           updatedAt: new Date().toISOString()
         });
-        console.log('✅ 사용자 설정 저장 완료');
         
         const now = new Date();
         const historyData = {
@@ -384,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const historyRef = collection(db, "settingsHistory");
         await addDoc(historyRef, historyData);
-        console.log('✅ 히스토리 저장 완료');
         
         showToast("✅ 설정 저장 완료!");
         
@@ -402,20 +378,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
+  
   // ✅ 신체 기록 불러오기
   window.loadBodyRecords = async function() {
     if (!currentUser) return;
-    
     try {
       console.log('📥 신체 기록 불러오기 시작...');
-      
       const bodyCollection = collection(db, "bodyRecords");
       const q = query(bodyCollection, where("uid", "==", currentUser.uid));
       const querySnapshot = await getDocs(q);
       
       bodyRecords = [];
       window.bodyRecords = [];
+      
       querySnapshot.forEach(docSnap => {
         const record = {
           id: docSnap.id,
@@ -438,11 +413,10 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error("❌ 신체 기록 불러오기 오류:", error);
     }
   };
-
+  
   // ✅ 설정 불러오기
   async function loadSettings() {
     if (!currentUser) return;
-    
     try {
       console.log('📥 설정 불러오기 시작...');
       const ref = doc(db, "userData", currentUser.uid);
@@ -483,13 +457,11 @@ document.addEventListener('DOMContentLoaded', function() {
       renderPlanTable();
     }
   }
-
+  
   // ✅ 설정 히스토리 불러오기
   async function loadSettingsHistory() {
     const historyContainer = document.getElementById('settingsHistoryList');
-    
     if (!currentUser) {
-      console.log('❌ 로그인되지 않아 히스토리를 불러올 수 없습니다');
       if (historyContainer) {
         historyContainer.innerHTML = '<div class="no-login">로그인 후 설정 기록을 확인할 수 있습니다.</div>';
       }
@@ -498,16 +470,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     try {
       console.log('📚 설정 히스토리 로드 시작...');
-      
       const historyCollection = collection(db, "settingsHistory");
       const querySnapshot = await getDocs(historyCollection);
-      
-      console.log(`📊 전체 문서 개수: ${querySnapshot.size}`);
       
       let historyList = [];
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
-        
         if (data.uid === currentUser.uid) {
           historyList.push({
             id: docSnap.id,
@@ -515,8 +483,6 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         }
       });
-      
-      console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
       
       historyList.sort((a, b) => {
         const timeA = a.timestamp || new Date(a.savedAt).getTime();
@@ -535,7 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const prevDate = item.prevPeriodStart || '미설정';
           const lastDate = item.periodStart || '미설정';
           const cycle = item.cycleLength || '28';
-          
           html += `
             <div class="history-item">
               <div class="history-date">📅 ${date}</div>
@@ -549,7 +514,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (historyContainer) {
         historyContainer.innerHTML = html;
-        console.log('✅ 히스토리 HTML 업데이트 완료');
       }
       
     } catch (error) {
@@ -559,14 +523,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
-
+  
   // ✅ 신체 기록 테이블 렌더링
   function renderBodyRecordsTable() {
     const tbody = document.getElementById('bodyRecordsTable');
     if (!tbody) return;
     
     tbody.innerHTML = '';
-    
     const recentRecords = bodyRecords.slice(0, 10);
     
     recentRecords.forEach(record => {
@@ -584,11 +547,10 @@ document.addEventListener('DOMContentLoaded', function() {
       tbody.appendChild(row);
     });
   }
-
+  
   // ✅ 신체 기록 삭제
   window.deleteBodyRecord = async function(recordId) {
     if (!currentUser) return;
-    
     if (!confirm('이 기록을 삭제하시겠습니까?')) return;
     
     try {
@@ -600,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast("❌ 기록 삭제 실패");
     }
   };
-
+  
   // ✅ 신체 정보 요약 업데이트
   function updateBodySummary() {
     const currentWeightDisplay = document.getElementById('currentWeightDisplay');
@@ -610,7 +572,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (bodyRecords.length > 0) {
       const latest = bodyRecords[0];
-      
       if (currentWeightDisplay) currentWeightDisplay.textContent = latest.weight + 'kg';
       if (currentBodyFatDisplay) currentBodyFatDisplay.textContent = latest.bodyFat ? latest.bodyFat + '%' : '-%';
       if (currentMuscleDisplay) currentMuscleDisplay.textContent = latest.muscleMass ? latest.muscleMass + 'kg' : '-kg';
@@ -625,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (remainingWeightDisplay) remainingWeightDisplay.textContent = '-kg';
     }
   }
-
+  
   // ✅ 통계 카드 업데이트
   function updateStatsCards() {
     const weightChangeDisplay = document.getElementById('weightChangeDisplay');
@@ -663,35 +624,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (muscleGainDisplay) {
       muscleGainDisplay.textContent = (muscleChange > 0 ? '+' : '') + muscleChange.toFixed(1) + 'kg';
-            muscleGainDisplay.style.color = muscleChange > 0 ? '#27ae60' : '#e74c3c';
+      muscleGainDisplay.style.color = muscleChange > 0 ? '#27ae60' : '#e74c3c';
     }
     
     if (currentBMIDisplay) {
       currentBMIDisplay.textContent = recent.bmi;
     }
   }
-
+  
   // ✅ 로그인 상태 감지
   onAuthStateChanged(auth, async (user) => {
     console.log('🔄 로그인 상태 변경:', user ? '로그인됨' : '로그아웃됨');
     
     if (user) {
       currentUser = user;
-      window.currentUser = user; // 전역 변수에도 할당
+      window.currentUser = user;
       console.log('✅ 사용자 정보:', currentUser.displayName);
       
       if (userInfo) {
-        userInfo.textContent = `정보: ${currentUser.displayName}`;
+        userInfo.textContent = currentUser.displayName;
       }
       
       if (loginBtn) {
         loginBtn.style.display = 'none';
-        console.log('🔒 로그인 버튼 숨김');
       }
       
       if (userSection) {
-        userSection.style.display = 'block';
-        console.log('👤 사용자 섹션 표시');
+        userSection.style.display = 'flex';
       }
       
       await loadSettings();
@@ -704,12 +663,10 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (loginBtn) {
         loginBtn.style.display = 'block';
-        console.log('🔓 로그인 버튼 표시');
       }
       
       if (userSection) {
         userSection.style.display = 'none';
-        console.log('🚫 사용자 섹션 숨김');
       }
       
       if (userInfo) {
@@ -719,7 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
       await loadSettingsHistory();
     }
   });
-
+  
   // ✅ 초기 플랜 생성
   generatePlan(null, 28, 5);
   renderPlanTable();
@@ -736,12 +693,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function generatePlan(startDateStr, cycle, menstrual) {
   planData = [];
   window.planData = [];
+  
   let startDate = startDateStr ? new Date(startDateStr) : new Date();
   const today = new Date();
   
   for (let i = 0; i < 90; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() + i);
+    
     const weekday = day.getDay();
     if (weekday === 0 || weekday === 6) continue;
     
@@ -756,13 +715,24 @@ function generatePlan(startDateStr, cycle, menstrual) {
     
     let cardio = "경사6%, 속도4.5, 30분";
     let home = "IMPT 루틴";
-    if (phase === '월경기') { cardio = "가볍게 걷기 20분"; home = "스트레칭"; }
-    if (phase === '배란기') { cardio = "속도5.0, 35분"; home = "IMPT + 코어"; }
+    
+    if (phase === '월경기') { 
+      cardio = "가볍게 걷기 20분"; 
+      home = "스트레칭"; 
+    }
+    if (phase === '배란기') { 
+      cardio = "속도5.0, 35분"; 
+      home = "IMPT + 코어"; 
+    }
     
     const planItem = {
       day: i + 1,
       date: `${day.getMonth() + 1}/${day.getDate()} (${['일','월','화','수','목','금','토'][weekday]})`,
-      phase, cardio, home, morningDone: false, eveningDone: false
+      phase, 
+      cardio, 
+      home, 
+      morningDone: false, 
+      eveningDone: false
     };
     
     planData.push(planItem);
@@ -787,19 +757,24 @@ function renderPlanTable() {
       <td><input type="checkbox" ${p.morningDone ? 'checked' : ''}></td>
       <td><input type="checkbox" ${p.eveningDone ? 'checked' : ''}></td>
     `;
+    
     const checkboxes = row.querySelectorAll('input[type="checkbox"]');
     const am = checkboxes[0];
     const pm = checkboxes[1];
-    if (am) am.addEventListener('change', () => { 
-      p.morningDone = am.checked; 
-      updateProgress(); 
+    
+    if (am) am.addEventListener('change', () => {
+      p.morningDone = am.checked;
+      updateProgress();
     });
-    if (pm) pm.addEventListener('change', () => { 
-      p.eveningDone = pm.checked; 
-      updateProgress(); 
+    
+    if (pm) pm.addEventListener('change', () => {
+      p.eveningDone = pm.checked;
+      updateProgress();
     });
+    
     tbody.appendChild(row);
   });
+  
   updateProgress();
 }
 
@@ -808,14 +783,15 @@ function updateProgress() {
   const total = planData.length * 2;
   const done = planData.filter(p => p.morningDone).length + planData.filter(p => p.eveningDone).length;
   const percent = Math.round((done / total) * 100);
+  
   const progressFill = document.getElementById('progressFill');
   const progressText = document.getElementById('progressText');
+  
   if (progressFill) progressFill.style.width = percent + '%';
   if (progressText) progressText.textContent = percent + '%';
   
   const statsSection = document.getElementById('stats');
   if (statsSection && statsSection.classList.contains('active')) {
-    console.log('📊 체크박스 변경으로 인한 차트 업데이트');
     setTimeout(() => {
       drawWorkoutChart();
     }, 100);
@@ -834,12 +810,8 @@ function drawAllCharts() {
 // ✅ 체중 변화 차트
 function drawWeightChart() {
   console.log('📊 체중 차트 그리기 시작...');
-  
   const ctx = document.getElementById('weightChart');
-  if (!ctx) {
-    console.error('❌ weightChart 요소를 찾을 수 없습니다');
-    return;
-  }
+  if (!ctx) return;
   
   if (window.weightChartInstance) {
     window.weightChartInstance.destroy();
@@ -847,8 +819,6 @@ function drawWeightChart() {
   
   try {
     if (bodyRecords.length === 0) {
-      console.log('📊 체중 데이터가 없어서 빈 차트를 그립니다');
-      
       window.weightChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -883,10 +853,7 @@ function drawWeightChart() {
         }
       });
     } else {
-      console.log('📊 실제 체중 데이터로 차트 그리기');
-      
       const recentData = bodyRecords.slice(0, 30).reverse();
-      
       window.weightChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -928,309 +895,39 @@ function drawWeightChart() {
         }
       });
     }
-    
-    console.log('✅ 체중 차트 그리기 완료');
   } catch (error) {
     console.error('❌ 체중 차트 그리기 실패:', error);
   }
 }
 
-// ✅ 체지방률 변화 차트
-function drawBodyFatChart() {
-  console.log('📊 체지방률 차트 그리기 시작...');
-  
-  const ctx = document.getElementById('bodyFatChart');
-  if (!ctx) {
-    console.error('❌ bodyFatChart 요소를 찾을 수 없습니다');
-    return;
-  }
-  
-  if (window.bodyFatChartInstance) {
-    window.bodyFatChartInstance.destroy();
-  }
-  
-  try {
-    const bodyFatData = bodyRecords.filter(r => r.bodyFat).slice(0, 30).reverse();
-    
-    if (bodyFatData.length === 0) {
-      console.log('📊 체지방률 데이터가 없어서 빈 차트를 그립니다');
-      
-      window.bodyFatChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['데이터가 없습니다'],
-          datasets: [{
-            label: '체지방률 (%)',
-            data: [20],
-            borderColor: '#e74c3c',
-            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: '체지방률 (%)'
-              }
-            }
-          },
-          plugins: {
-            title: {
-              display: true,
-              text: '체지방률 변화 (체지방률 데이터를 추가해주세요)'
-            }
-          }
-        }
-      });
-    } else {
-      console.log('📊 실제 체지방률 데이터로 차트 그리기');
-      
-      window.bodyFatChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: bodyFatData.map(r => r.date),
-          datasets: [{
-            label: '체지방률 (%)',
-            data: bodyFatData.map(r => r.bodyFat),
-            borderColor: '#e74c3c',
-            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: '체지방률 (%)'
-              }
-            }
-          },
-          plugins: {
-            title: {
-              display: true,
-              text: '체지방률 변화'
-            }
-          }
-        }
-      });
-    }
-    
-    console.log('✅ 체지방률 차트 그리기 완료');
-  } catch (error) {
-    console.error('❌ 체지방률 차트 그리기 실패:', error);
-  }
-}
+// sw.js
+const CACHE_NAME = 'diet-app-v1';
+const urlsToCache = [
+  '/',
+  '/style.css',
+  '/script.js',
+  '/index.html'
+];
 
-// ✅ 근육량 변화 차트
-function drawMuscleChart() {
-  console.log('📊 근육량 차트 그리기 시작...');
-  
-  const ctx = document.getElementById('muscleChart');
-  if (!ctx) {
-    console.error('❌ muscleChart 요소를 찾을 수 없습니다');
-    return;
-  }
-  
-  if (window.muscleChartInstance) {
-    window.muscleChartInstance.destroy();
-  }
-  
-  try {
-    const muscleData = bodyRecords.filter(r => r.muscleMass).slice(0, 30).reverse();
-    
-    if (muscleData.length === 0) {
-      console.log('📊 근육량 데이터가 없어서 빈 차트를 그립니다');
-      
-      window.muscleChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['데이터가 없습니다'],
-          datasets: [{
-            label: '근육량 (kg)',
-            data: [40],
-            borderColor: '#27ae60',
-            backgroundColor: 'rgba(39, 174, 96, 0.1)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: '근육량 (kg)'
-              }
-            }
-          },
-          plugins: {
-            title: {
-              display: true,
-              text: '근육량 변화 (근육량 데이터를 추가해주세요)'
-            }
-          }
-        }
-      });
-    } else {
-      console.log('📊 실제 근육량 데이터로 차트 그리기');
-      
-      window.muscleChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: muscleData.map(r => r.date),
-          datasets: [{
-            label: '근육량 (kg)',
-            data: muscleData.map(r => r.muscleMass),
-            borderColor: '#27ae60',
-            backgroundColor: 'rgba(39, 174, 96, 0.1)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: '근육량 (kg)'
-              }
-            }
-          },
-          plugins: {
-            title: {
-              display: true,
-              text: '근육량 변화'
-            }
-          }
-        }
-      });
-    }
-    
-    console.log('✅ 근육량 차트 그리기 완료');
-  } catch (error) {
-    console.error('❌ 근육량 차트 그리기 실패:', error);
-  }
-}
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('캐시 열림');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
 
-// ✅ 운동 완료율 차트
-function drawWorkoutChart() {
-  console.log('📊 운동 완료율 차트 그리기 시작...');
-  
-  const ctx = document.getElementById('workoutChart');
-  if (!ctx) {
-    console.error('❌ workoutChart 요소를 찾을 수 없습니다');
-    return;
-  }
-  
-  if (window.workoutChartInstance) {
-    window.workoutChartInstance.destroy();
-  }
-  
-  try {
-    if (planData.length === 0) {
-      console.log('📊 플랜 데이터가 없어서 빈 차트를 그립니다');
-      
-      window.workoutChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['플랜이 없습니다'],
-          datasets: [{
-            data: [100],
-            backgroundColor: ['#ecf0f1'],
-            borderWidth: 2,
-            borderColor: '#fff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: '운동 완료 현황 (설정에서 플랜을 생성해주세요)'
-            },
-            legend: {
-              position: 'bottom'
-            }
-          }
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        if (response) {
+          return response;
         }
-      });
-    } else {
-      const morningDone = planData.filter(p => p.morningDone).length;
-      const eveningDone = planData.filter(p => p.eveningDone).length;
-      const total = planData.length;
-      const notDone = (total * 2) - morningDone - eveningDone;
-      
-      console.log('📊 운동 통계 계산:', {
-        총플랜: total,
-        아침완료: morningDone,
-        저녁완료: eveningDone,
-        미완료: notDone,
-        총운동횟수: total * 2,
-        완료횟수: morningDone + eveningDone
-      });
-      
-      window.workoutChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['아침 운동 완료', '저녁 운동 완료', '미완료'],
-          datasets: [{
-            data: [morningDone, eveningDone, notDone],
-            backgroundColor: [
-              '#3498db',
-              '#e74c3c',
-              '#ecf0f1'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: `운동 완료 현황 (총 ${total * 2}회 중 ${morningDone + eveningDone}회 완료)`
-            },
-            legend: {
-              position: 'bottom'
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const label = context.label || '';
-                  const value = context.parsed || 0;
-                  const totalValue = morningDone + eveningDone + notDone;
-                  const percentage = Math.round((value / totalValue) * 100);
-                  return `${label}: ${value}회 (${percentage}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-    
-    console.log('✅ 운동 완료율 차트 그리기 완료');
-  } catch (error) {
-    console.error('❌ 운동 완료율 차트 그리기 실패:', error);
-  }
-}
+        return fetch(event.request);
+      }
+    )
+  );
+});
