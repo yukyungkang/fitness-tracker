@@ -10,25 +10,81 @@
 <script type="module" src="script.js" defer></script>
 </head>
 <body>
+
+<!-- PC/태블릿용 헤더 -->
 <header>
-  <h1>90일 다이어트 플랜</h1>
-  
-  <!-- ✅ 우측 상단 로그인/로그아웃 영역 -->
-  <div class="auth-section">
-    <button id="loginBtn">Google 로그인</button>
-    <div id="userSection" style="display:none;">
-      <button id="logoutBtn">로그아웃</button>
-      <p id="userInfo"></p>
+  <div class="header-content">
+    <div class="logo-section">
+      <div class="logo-icon">💪</div>
+      <h1>90일 다이어트 플랜</h1>
+    </div>
+    
+    <!-- 우측 상단 로그인 영역 -->
+    <div class="auth-section">
+      <button id="loginBtn" class="auth-btn login-btn">
+        <span class="btn-icon">🔐</span>
+        Google 로그인
+      </button>
+      <div id="userSection" class="user-section">
+        <div class="user-info">
+          <span class="user-name" id="userInfo"></span>
+        </div>
+        <button id="logoutBtn" class="auth-btn logout-btn">
+          로그아웃
+        </button>
+      </div>
     </div>
   </div>
 </header>
 
-<nav>
-  <button class="tab-btn active" data-tab="guide">가이드</button>
-  <button class="tab-btn" data-tab="plan">플랜</button>
-  <button class="tab-btn" data-tab="body">신체 정보</button>
-  <button class="tab-btn" data-tab="stats">통계</button>
-  <button class="tab-btn" data-tab="settings">설정</button>
+<!-- PC용 상단 네비게이션 -->
+<nav class="desktop-nav">
+  <div class="nav-container">
+    <button class="nav-item active" data-tab="guide">
+      <span class="nav-icon">📖</span>
+      <span class="nav-text">가이드</span>
+    </button>
+    <button class="nav-item" data-tab="plan">
+      <span class="nav-icon">📋</span>
+      <span class="nav-text">플랜</span>
+    </button>
+    <button class="nav-item" data-tab="body">
+      <span class="nav-icon">📊</span>
+      <span class="nav-text">신체 정보</span>
+    </button>
+    <button class="nav-item" data-tab="stats">
+      <span class="nav-icon">📈</span>
+      <span class="nav-text">통계</span>
+    </button>
+    <button class="nav-item" data-tab="settings">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-text">설정</span>
+    </button>
+  </div>
+</nav>
+
+<!-- 모바일용 하단 네비게이션 -->
+<nav class="mobile-bottom-nav">
+  <button class="mobile-nav-item active" data-tab="guide">
+    <span class="mobile-nav-icon">📖</span>
+    <span class="mobile-nav-text">가이드</span>
+  </button>
+  <button class="mobile-nav-item" data-tab="plan">
+    <span class="mobile-nav-icon">📋</span>
+    <span class="mobile-nav-text">플랜</span>
+  </button>
+  <button class="mobile-nav-item" data-tab="body">
+    <span class="mobile-nav-icon">📊</span>
+    <span class="mobile-nav-text">신체정보</span>
+  </button>
+  <button class="mobile-nav-item" data-tab="stats">
+    <span class="mobile-nav-icon">📈</span>
+    <span class="mobile-nav-text">통계</span>
+  </button>
+  <button class="mobile-nav-item" data-tab="settings">
+    <span class="mobile-nav-icon">⚙️</span>
+    <span class="mobile-nav-text">설정</span>
+  </button>
 </nav>
 
 <!-- Toast 알림 -->
@@ -38,10 +94,38 @@
 <section id="guide" class="active">
   <h2>주기 기반 다이어트 가이드</h2>
   <div class="card-container">
-    <div class="card red"><h3>월경기</h3><p>저강도</p><ul><li>스트레칭</li><li>걷기</li></ul></div>
-    <div class="card green"><h3>여포기</h3><p>중강도</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul></div>
-    <div class="card yellow"><h3>배란기</h3><p>고강도</p><ul><li>빠른 걷기</li><li>IMPT + 코어</li></ul></div>
-    <div class="card purple"><h3>황체기</h3><p>중강도 유지</p><ul><li>인클라인 걷기</li><li>IMPT 루틴</li></ul></div>
+    <div class="card red">
+      <h3>월경기</h3>
+      <p>저강도</p>
+      <ul>
+        <li>스트레칭</li>
+        <li>걷기</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>여포기</h3>
+      <p>중강도</p>
+      <ul>
+        <li>인클라인 걷기</li>
+        <li>IMPT 루틴</li>
+      </ul>
+    </div>
+    <div class="card yellow">
+      <h3>배란기</h3>
+      <p>고강도</p>
+      <ul>
+        <li>빠른 걷기</li>
+        <li>IMPT + 코어</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>황체기</h3>
+      <p>중강도 유지</p>
+      <ul>
+        <li>인클라인 걷기</li>
+        <li>IMPT 루틴</li>
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -52,12 +136,22 @@
     <p>전체 진행률: <span id="progressText">0%</span></p>
     <div class="progress-bar"><div id="progressFill"></div></div>
   </div>
-  <table>
-    <thead>
-      <tr><th>Day</th><th>날짜</th><th>주기</th><th>아침 유산소</th><th>저녁 홈트</th><th>아침 완료</th><th>저녁 완료</th></tr>
-    </thead>
-    <tbody id="planTable"></tbody>
-  </table>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>날짜</th>
+          <th>주기</th>
+          <th>아침 유산소</th>
+          <th>저녁 홈트</th>
+          <th>아침 완료</th>
+          <th>저녁 완료</th>
+        </tr>
+      </thead>
+      <tbody id="planTable"></tbody>
+    </table>
+  </div>
 </section>
 
 <!-- 신체 정보 기록 -->
@@ -113,7 +207,6 @@
           </select>
         </div>
       </div>
-      
       <div class="form-row">
         <div class="form-group">
           <label for="weightInput">체중 (kg)</label>
@@ -124,7 +217,6 @@
           <input type="number" id="bodyFatInput" placeholder="예: 18.5" step="0.1">
         </div>
       </div>
-      
       <div class="form-row">
         <div class="form-group">
           <label for="muscleMassInput">근육량 (kg)</label>
@@ -135,7 +227,6 @@
           <input type="number" id="visceralFatInput" placeholder="예: 5" step="1">
         </div>
       </div>
-      
       <div class="form-row">
         <div class="form-group">
           <label for="waterPercentInput">수분률 (%)</label>
@@ -146,12 +237,10 @@
           <input type="number" id="bmrInput" placeholder="예: 1450" step="1">
         </div>
       </div>
-      
       <div class="form-group full-width">
         <label for="bodyMemo">메모</label>
         <textarea id="bodyMemo" placeholder="컨디션, 측정 조건 등을 기록해보세요"></textarea>
       </div>
-      
       <button id="addBodyDataBtn" class="btn-primary">📊 신체 정보 저장</button>
     </div>
   </div>
@@ -243,22 +332,47 @@
 <!-- 설정 -->
 <section id="settings">
   <h2>설정</h2>
-  <label>이전 생리 시작일:</label>
-  <input type="date" id="prevPeriodStart"><br><br>
-  <label>마지막 생리 시작일:</label>
-  <input type="date" id="periodStart"><br><br>
-  <p>평균 주기: <span id="avgCycleDisplay">28</span>일</p><br>
-  <label>평균 주기 (일):</label>
-  <input type="number" id="cycleLength" value="28"><br><br>
-  <label>월경기 길이 (일):</label>
-  <input type="number" id="menstrualLength" value="5"><br><br>
-  <label>목표 체중 (kg):</label>
-  <input type="number" id="goalWeight" value="60"><br><br>
-  <label>키 (cm):</label>
-  <input type="number" id="userHeight" placeholder="예: 165"><br><br>
-  <button id="saveSettingsBtn">저장</button>
-  <h3>이전 설정 기록</h3>
-  <div id="settingsHistoryList"></div>
+  <div class="settings-form">
+    <div class="form-group">
+      <label for="prevPeriodStart">이전 생리 시작일:</label>
+      <input type="date" id="prevPeriodStart">
+    </div>
+    
+    <div class="form-group">
+      <label for="periodStart">마지막 생리 시작일:</label>
+      <input type="date" id="periodStart">
+    </div>
+    
+    <div class="form-group">
+      <label>평균 주기: <span id="avgCycleDisplay">28</span>일</label>
+    </div>
+    
+    <div class="form-group">
+      <label for="cycleLength">평균 주기 (일):</label>
+      <input type="number" id="cycleLength" value="28">
+    </div>
+    
+    <div class="form-group">
+      <label for="menstrualLength">월경기 길이 (일):</label>
+      <input type="number" id="menstrualLength" value="5">
+    </div>
+    
+    <div class="form-group">
+      <label for="goalWeight">목표 체중 (kg):</label>
+      <input type="number" id="goalWeight" value="60">
+    </div>
+    
+    <div class="form-group">
+      <label for="userHeight">키 (cm):</label>
+      <input type="number" id="userHeight" placeholder="예: 165">
+    </div>
+    
+    <button id="saveSettingsBtn" class="btn-primary">💾 설정 저장</button>
+    
+    <h3>이전 설정 기록</h3>
+    <div id="settingsHistoryList"></div>
+  </div>
 </section>
+
 </body>
 </html>
