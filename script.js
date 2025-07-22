@@ -58,45 +58,45 @@ function switchTab(tabName) {
   const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
   const selectedSection = document.getElementById(tabName);
   
-  if (selectedTab) selectedTab.classList.add('active');
-  if (selectedSection) selectedSection.classList.add('active');
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+    console.log('✅ 탭 활성화:', selectedTab);
+  } else {
+    console.error('❌ 탭을 찾을 수 없음:', tabName);
+  }
   
-  console.log('활성화된 섹션:', selectedSection);
+  if (selectedSection) {
+    selectedSection.classList.add('active');
+    console.log('✅ 섹션 활성화:', selectedSection);
+  } else {
+    console.error('❌ 섹션을 찾을 수 없음:', tabName);
+  }
 }
 
 // ✅ DOM 로드 완료 후 실행
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM 로드 완료');
   
-  // ✅ 요소 존재 확인 및 디버깅
+  // ✅ 요소 존재 확인
   const loginBtn = document.getElementById('loginBtn');
   const userSection = document.getElementById('userSection');
   const authSection = document.querySelector('.auth-section');
   const logoutBtn = document.getElementById('logoutBtn');
   const userInfo = document.getElementById('userInfo');
   
-  console.log('🔍 요소 확인:');
-  console.log('- 로그인 버튼:', loginBtn);
-  console.log('- 사용자 섹션:', userSection);
-  console.log('- 인증 섹션:', authSection);
-  console.log('- 로그아웃 버튼:', logoutBtn);
-  console.log('- 사용자 정보:', userInfo);
+  console.log('로그인 버튼:', loginBtn);
+  console.log('사용자 섹션:', userSection);
+  console.log('인증 섹션:', authSection);
   
-  // ✅ 초기 상태 강제 설정
+  // ✅ 초기 상태 설정
   if (loginBtn) {
     loginBtn.style.display = 'block';
-    loginBtn.style.visibility = 'visible';
-    loginBtn.style.opacity = '1';
-    console.log('✅ 로그인 버튼 강제 표시 완료');
-  } else {
-    console.error('❌ 로그인 버튼이 존재하지 않습니다!');
+    console.log('로그인 버튼 강제 표시');
   }
   
   if (userSection) {
     userSection.style.display = 'none';
-    console.log('✅ 사용자 섹션 강제 숨김 완료');
-  } else {
-    console.error('❌ 사용자 섹션이 존재하지 않습니다!');
+    console.log('사용자 섹션 강제 숨김');
   }
   
   // ✅ 탭 메뉴 이벤트
@@ -148,9 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast("❌ 로그인 실패: " + error.message);
       }
     });
-    console.log('✅ 로그인 이벤트 리스너 등록 완료');
-  } else {
-    console.error('❌ 로그인 버튼이 없어서 이벤트 등록 실패');
   }
 
   // ✅ 로그아웃 이벤트
@@ -164,9 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('❌ 로그아웃 오류:', error);
       }
     });
-    console.log('✅ 로그아웃 이벤트 리스너 등록 완료');
-  } else {
-    console.error('❌ 로그아웃 버튼이 없어서 이벤트 등록 실패');
   }
 
   // ✅ 평균 주기 자동 계산
@@ -187,10 +181,17 @@ document.addEventListener('DOMContentLoaded', function() {
   if (prevPeriodStartInput) prevPeriodStartInput.addEventListener('change', calcAvgCycle);
   if (periodStartInput) periodStartInput.addEventListener('change', calcAvgCycle);
 
-  // ✅ 설정 저장
+  // ✅ 설정 저장 (디버깅 강화)
   if (saveSettingsBtn) {
     saveSettingsBtn.addEventListener('click', async () => {
-      if (!currentUser) return showToast("로그인이 필요합니다.");
+      console.log('💾 설정 저장 버튼 클릭됨');
+      
+      if (!currentUser) {
+        console.log('❌ 사용자 로그인 안됨');
+        return showToast("로그인이 필요합니다.");
+      }
+      
+      console.log('👤 현재 사용자:', currentUser.displayName);
       
       const start = periodStartInput?.value;
       const prevStart = prevPeriodStartInput?.value;
@@ -198,10 +199,24 @@ document.addEventListener('DOMContentLoaded', function() {
       const menstrualLength = parseInt(menstrualLengthInput?.value || 5);
       goalWeight = parseFloat(goalWeightInput?.value || 60);
       
-      if (!start || !cycleLength || !menstrualLength) return showToast("모든 항목 입력!");
+      console.log('📝 입력 데이터:', {
+        start,
+        prevStart,
+        cycleLength,
+        menstrualLength,
+        goalWeight
+      });
+      
+      if (!start || !cycleLength || !menstrualLength) {
+        console.log('❌ 필수 항목 누락');
+        return showToast("모든 항목 입력!");
+      }
       
       try {
+        showToast("💾 설정 저장 중...");
+        
         // 1. 사용자 설정 저장
+        console.log('📤 사용자 설정 저장 시작...');
         const ref = doc(db, "userData", currentUser.uid);
         await setDoc(ref, {
           periodStart: start,
@@ -211,8 +226,10 @@ document.addEventListener('DOMContentLoaded', function() {
           goalWeight,
           updatedAt: new Date().toISOString()
         });
+        console.log('✅ 사용자 설정 저장 완료');
         
         // 2. 설정 히스토리 저장
+        console.log('📤 히스토리 저장 시작...');
         const now = new Date();
         const historyData = {
           uid: currentUser.uid,
@@ -226,21 +243,26 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         const historyId = `${currentUser.uid}_${now.getTime()}`;
+        console.log('📝 히스토리 ID:', historyId);
+        console.log('📝 히스토리 데이터:', historyData);
+        
         const historyRef = doc(db, "settingsHistory", historyId);
         await setDoc(historyRef, historyData);
-        
-        console.log('✅ 설정 히스토리 저장:', historyData);
+        console.log('✅ 히스토리 저장 완료');
         
         showToast("✅ 설정 저장 완료!");
+        
+        // 3. 플랜 재생성
         generatePlan(start, cycleLength, menstrualLength);
         renderPlanTable();
         if (goalWeightDisplay) goalWeightDisplay.textContent = goalWeight;
         
-        // 3. 히스토리 다시 로드
+        // 4. 히스토리 다시 로드
+        console.log('🔄 히스토리 다시 로드...');
         await loadSettingsHistory();
         
       } catch (error) {
-        console.error("설정 저장 오류:", error);
+        console.error("❌ 설정 저장 오류:", error);
         showToast("❌ 설정 저장 실패: " + error.message);
       }
     });
@@ -266,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!currentUser) return;
     
     try {
+      console.log('📥 설정 불러오기 시작...');
       const ref = doc(db, "userData", currentUser.uid);
       const snap = await getDoc(ref);
       
@@ -285,6 +308,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         generatePlan(data.periodStart, data.cycleLength, data.menstrualLength);
         renderPlanTable();
+        
+        console.log('✅ 설정 불러오기 완료');
       } else {
         console.log('📭 저장된 설정이 없습니다');
         generatePlan(null, 28, 5);
@@ -295,39 +320,50 @@ document.addEventListener('DOMContentLoaded', function() {
       await loadSettingsHistory();
       
     } catch (error) {
-      console.error("설정 불러오기 오류:", error);
+      console.error("❌ 설정 불러오기 오류:", error);
       generatePlan(null, 28, 5);
       renderPlanTable();
     }
   }
 
-  // ✅ 설정 히스토리 불러오기
+  // ✅ 설정 히스토리 불러오기 (디버깅 강화)
   async function loadSettingsHistory() {
     if (!currentUser) {
       console.log('❌ 로그인되지 않아 히스토리를 불러올 수 없습니다');
+      const historyContainer = document.getElementById('settingsHistoryList');
+      if (historyContainer) {
+        historyContainer.innerHTML = '<div class="no-login">로그인 후 설정 기록을 확인할 수 있습니다.</div>';
+      }
       return;
     }
     
     try {
       console.log('📚 설정 히스토리 로드 시작...');
+      console.log('👤 현재 사용자 UID:', currentUser.uid);
       
       const historyCollection = collection(db, "settingsHistory");
-      const q = query(
-        historyCollection,
-        where("uid", "==", currentUser.uid)
-      );
+      console.log('📁 컬렉션 참조:', historyCollection);
       
-      const querySnapshot = await getDocs(q);
-      console.log(`📊 히스토리 문서 개수: ${querySnapshot.size}`);
+      // 단순 쿼리로 변경 (인덱스 문제 방지)
+      const allDocs = await getDocs(historyCollection);
+      console.log(`📊 전체 문서 개수: ${allDocs.size}`);
       
       let historyList = [];
-      querySnapshot.forEach(docSnap => {
+      allDocs.forEach(docSnap => {
         const data = docSnap.data();
-        historyList.push({
-          id: docSnap.id,
-          ...data
-        });
+        console.log('📄 문서 데이터:', data);
+        
+        // 현재 사용자의 문서만 필터링
+        if (data.uid === currentUser.uid) {
+          historyList.push({
+            id: docSnap.id,
+            ...data
+          });
+        }
       });
+      
+      console.log(`📋 필터링된 히스토리 개수: ${historyList.length}`);
+            console.log('📋 히스토리 리스트:', historyList);
       
       // 날짜순 정렬 (최신순)
       historyList.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
@@ -335,12 +371,11 @@ document.addEventListener('DOMContentLoaded', function() {
       // 최근 5개만 표시
       historyList = historyList.slice(0, 5);
       
-      console.log('📋 정렬된 히스토리:', historyList);
-      
       // HTML 생성
       let html = '';
       if (historyList.length === 0) {
         html = '<div class="no-history">저장된 설정 기록이 없습니다.</div>';
+        console.log('📝 히스토리가 없습니다');
       } else {
         historyList.forEach(item => {
           const date = item.savedAtKST || item.savedAt.slice(0, 10);
@@ -357,6 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `;
         });
+        console.log('📝 히스토리 HTML 생성 완료');
       }
       
       const historyContainer = document.getElementById('settingsHistoryList');
@@ -364,11 +400,11 @@ document.addEventListener('DOMContentLoaded', function() {
         historyContainer.innerHTML = html;
         console.log('✅ 히스토리 HTML 업데이트 완료');
       } else {
-                console.error('❌ settingsHistoryList 요소를 찾을 수 없습니다');
+        console.error('❌ settingsHistoryList 요소를 찾을 수 없습니다');
       }
       
     } catch (error) {
-      console.error("히스토리 불러오기 오류:", error);
+      console.error("❌ 히스토리 불러오기 오류:", error);
       const historyContainer = document.getElementById('settingsHistoryList');
       if (historyContainer) {
         historyContainer.innerHTML = '<div class="error">히스토리를 불러오는 중 오류가 발생했습니다.</div>';
@@ -431,7 +467,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (userInfo) {
         userInfo.textContent = `정보: ${currentUser.displayName}`;
-        console.log('📝 사용자 정보 업데이트 완료');
       }
       
       if (loginBtn) {
@@ -445,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // 데이터 로드
-      await loadSettings(); // 이 함수 안에서 loadSettingsHistory도 호출됨
+      await loadSettings();
       await loadWeights();
       
     } else {
@@ -454,8 +489,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (loginBtn) {
         loginBtn.style.display = 'block';
-        loginBtn.style.visibility = 'visible';
-        loginBtn.style.opacity = '1';
         console.log('🔓 로그인 버튼 표시');
       }
       
@@ -466,14 +499,10 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (userInfo) {
         userInfo.textContent = '';
-        console.log('🗑️ 사용자 정보 초기화');
       }
       
       // 히스토리 초기화
-      const historyContainer = document.getElementById('settingsHistoryList');
-      if (historyContainer) {
-        historyContainer.innerHTML = '<div class="no-login">로그인 후 설정 기록을 확인할 수 있습니다.</div>';
-      }
+      await loadSettingsHistory();
     }
   });
 
